@@ -1,47 +1,52 @@
 #pragma once
 
 enum OperatorEnum {
-    ADD, // +, -, *, /, >, < , , ;, 
-    SUB,
-    MUL,
-    DIV,
-    GRT_THN,
-    LSS_THN,
-    EQUAL,
-    R_PAREN,
-    L_PAREN,
-    R_CURL,
-    L_CURL,
-    COMMA,
-    SEM_COM,
-    COLON,
-    R_SQBRA,
-    L_SQBRA,
-    UNDER_SC,
+    ADDITION,
+    SUBTRACTION,
+    DIVISION,
+    MULTOPLICATION,
+
+    GREATER_THAN,
+    LESSER_THAN,
+    ASSIGNMENT,
+    EQUALS,
+    NOT_EQUAL,
+    LESS_THAN_EQUAL,
+    GREATER_THAN_EQUAL,
+
+    RIGHT_PAREN,
+    LEFT_PAREN,
+    RIGHT_CURLY,
+    LEFT_CURLY,
+    RIGHT_SQUARE_BRACKET,
+    LEFT_SQUARE_BRACKET,
+    UNDERSCORE,
+
     DASH,
+    COLON,
+    SEMI_COLON,
     AT_RATE,
     DOLLAR,
-    QUES,
-    STRAIGHT,
+    QUESTION_MARK,
+    STRAIGHT_BAR,
     TILDE,
     BACK_TICK,
     HASH,
     PERCENT,
-    EXCLAIM,
+    EXCLAIMATION_MARK,
     CARET,
+    COMMA,
     AMPERSAND,
     BACK_SLASH,
     DOT,
-    EQUALS,
     // These are single and double quotes. 
     // They will be later decided if they are right or left. 
-    D_QUOTES,
-    S_QUOTES,
 
-    R_DQUOT,
-    L_DQUOT,
-    R_SINQUOT,
-    L_SINQUOT,
+    DOUBLE_QUOTE,
+    RIGHT_DOUBLE_QUOTE,
+    LEFT_DOUBLE_QUOTE,
+    RIGHT_SINGLE_QUOTE,
+    LEFT_SINGLE_QUOTE,
 };
 
 
@@ -49,6 +54,7 @@ struct Operator {
     OperatorEnum operator_enum;
     // uint32_t arg_count; 
     int precedence;
+    bool can_be_doubled;
 
     // added to fix the compiler warning.
     Operator() {
@@ -56,7 +62,7 @@ struct Operator {
 
     // added to fix the macro.
     Operator(OperatorEnum op_enum, int prec):
-        operator_enum(op_enum), precedence(prec) 
+        operator_enum(op_enum), precedence(prec)
     {
     
     }

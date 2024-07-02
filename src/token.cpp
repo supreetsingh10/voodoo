@@ -121,13 +121,18 @@ void Identifier::check_set_keyword() {
 std::set<TokenTypes> Identifier::m_compatible_types = {TokenTypes::IDENTIFIER, TokenTypes::NUMBER}; 
 
 std::set<std::string> Identifier::m_set_keywords = {
+// keywords
     "let", 
+    "for", 
+    "loop",
+    "func",
+
+
+
+// datatypes. 
     "int", 
     "str", 
     "deci", 
-    "for", 
-    "loop",
-    "func"
 }; 
 
 
@@ -141,11 +146,15 @@ bool Identifier::parse(char cur, char next) {
 }
 
 bool Identifier::incompatible_type(char next_char) {
-    if(Identifier::m_compatible_types.find(m_symbol_map[next_char]) != m_compatible_types.end()) {
-        return false;
+    if (Token::get_type(next_char) == TokenTypes::OPERATOR) {
+       if (next_char == '_')
+           return false;
     }
 
-    return true;
+    if(Identifier::m_compatible_types.find(m_symbol_map[next_char]) == m_compatible_types.end())
+        return true;
+
+    return false;
 }
 
 
@@ -181,6 +190,7 @@ bool Numbers::incompatible_type(char next) {
             return false;
         } 
     }
+
     return true;
 }
 
@@ -191,57 +201,56 @@ Operators::~Operators() {}
 // The lower the precedence the important the operator, it will be executed first. 
 std::map<std::string, Operator> Operators::OperatorMap = {
 {
-        "+", Operator(OperatorEnum::ADD, 4)
+        "+", Operator(OperatorEnum::ADDITION, 4)
     }, 
 {
-        "-", Operator(OperatorEnum::SUB, 4)
+        "-", Operator(OperatorEnum::SUBTRACTION, 4)
     },
 {
-        "*", Operator(OperatorEnum::MUL, 3)
+        "*", Operator(OperatorEnum::MULTOPLICATION, 3)
     },
 {
-        "/", Operator(OperatorEnum::DIV, 3)
+        "/", Operator(OperatorEnum::DIVISION, 3)
     },
 {
-        ">", Operator(OperatorEnum::GRT_THN, 6)
+        ">", Operator(OperatorEnum::GREATER_THAN, 6)
     },
 {
-        "<", Operator(OperatorEnum::LSS_THN, 6)
+        "<", Operator(OperatorEnum::LESSER_THAN, 6)
     },
 {
-        "=", Operator(OperatorEnum::EQUAL, 14)
+        "=", Operator(OperatorEnum::ASSIGNMENT, 14)
     },
 {
-        "(", Operator(OperatorEnum::R_PAREN, 1)
+        "(", Operator(OperatorEnum::RIGHT_PAREN, 1)
     },
 {
-        ")", Operator(OperatorEnum::L_PAREN, 1)
+        ")", Operator(OperatorEnum::LEFT_PAREN, 1)
     },
 {
-        "{", Operator(OperatorEnum::R_CURL, 1)
+        "{", Operator(OperatorEnum::RIGHT_CURLY, 1)
     },
 {
-        "}", Operator(OperatorEnum::L_CURL, 1)
+        "}", Operator(OperatorEnum::LEFT_CURLY, 1)
     },
 {
         ",", Operator(OperatorEnum::COMMA, 15)
     },
 {
-        ";", Operator(OperatorEnum::SEM_COM, 1)
+        ";", Operator(OperatorEnum::SEMI_COLON, 1)
     }, 
 {
     ":", Operator(OperatorEnum::COLON, 1)
-
 },
 {
-        "[", Operator(OperatorEnum::R_SQBRA, 1)
+        "[", Operator(OperatorEnum::RIGHT_SQUARE_BRACKET, 1)
     },
 
 {
         "==", Operator(OperatorEnum::EQUALS, 8)
     },
 {
-        "]", Operator(OperatorEnum::L_SQBRA, 1)
+        "]", Operator(OperatorEnum::LEFT_SQUARE_BRACKET, 1)
     },
 {
         "@", Operator(OperatorEnum::AT_RATE, 1)
@@ -250,10 +259,10 @@ std::map<std::string, Operator> Operators::OperatorMap = {
         "$", Operator(OperatorEnum::DOLLAR, 1)
     },
 {
-        "?", Operator(OperatorEnum::QUES, 6)
+        "?", Operator(OperatorEnum::QUESTION_MARK, 6)
     },
 {
-        "|", Operator(OperatorEnum::STRAIGHT, 8)
+        "|", Operator(OperatorEnum::STRAIGHT_BAR, 8)
     },
 {
         "~", Operator(OperatorEnum::TILDE, 8)
@@ -268,7 +277,7 @@ std::map<std::string, Operator> Operators::OperatorMap = {
         "%", Operator(OperatorEnum::PERCENT, 3)
     },
 {
-        "!", Operator(OperatorEnum::EXCLAIM, 7)
+        "!", Operator(OperatorEnum::EXCLAIMATION_MARK, 7)
     },
 {
         "^", Operator(OperatorEnum::CARET, 9)
@@ -280,16 +289,27 @@ std::map<std::string, Operator> Operators::OperatorMap = {
         "\\", Operator(OperatorEnum::BACK_SLASH, 1)
     },
 {
-        "\"", Operator(OperatorEnum::D_QUOTES, 3)
+        "\"", Operator(OperatorEnum::DOUBLE_QUOTE, 3)
     }, 
 {
-        "_", Operator(OperatorEnum::UNDER_SC, 1)
+        "_", Operator(OperatorEnum::UNDERSCORE, 1)
     },
 };
 
 
+// So operator should also check for the 
 bool Operators::parse(char cur, char next) {
     token_value += cur; 
+
+    // Check here if the certain operator can only come once, or it can be doubled. 
+    std::set<char> single_operators = { '{', '}', '(', ')', '[', ']', '?', ','};
+
+    // if it finds any of these characters that can only exist alone, 
+    // then it will return true and tokenize them
+    // else it will go forward
+    if(single_operators.find(cur) != single_operators.end())
+        return true;
+
     return this->incompatible_type(next); 
 }
 
@@ -306,8 +326,8 @@ bool Operators::check_set_valid_token_type() {
     try {
         this->m_operator_type = OperatorMap.at(token_value);
     } catch (std::out_of_range) {
+       std::cerr << "Failed the operator " << this->token_value << ", check at line number " << m_line_number << std::endl;
        assert(!"Failed to find the operator"); 
-       std::cerr << "Failed the operator, check at line number " << m_line_number << std::endl;
        exit(1);
     }
     return true;
