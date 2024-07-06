@@ -4,16 +4,14 @@
 #include <memory>
 #include "../include/utilities.hpp"
 
-Lexer::~Lexer() 
-{
+Lexer::~Lexer() {
     Utils::logger("Destructed");
     assert(m_vptokens->size() != 0);
     SAFE_RELEASE_VECTOR(*m_vptokens);
 }
 
 
-void Lexer::read_file(const std::string& file_name) 
-{
+void Lexer::read_file(const std::string& file_name) {
     source_code = std::make_unique<Source>();
     source_code->initialize(file_name);
 }
@@ -31,10 +29,14 @@ void Lexer::tokenize() {
         Operators* ops = dynamic_cast<Operators*>(m_pcurrent_token); 
         ops->check_set_valid_token_type();
     }
+
 #if DEBUG
     Utils::logger(m_pcurrent_token->get_value());
 #endif
+
     m_vptokens->push_back(m_pcurrent_token->make_copy()); 
+
+    // delete the copied token to prevent memory leak.
     delete m_pcurrent_token; 
     m_pcurrent_token = nullptr;
 }
@@ -43,12 +45,8 @@ void Lexer::tokenize() {
 // The current_char type is checked and set. 
 // If the current_char type is valid then it goes forward peeks the next character and goes on in the loop. 
 // If the next character is incompatible then it breaks the loop, copies the token and then pushes it. 
-void Lexer::scan() 
-{    
-    std::string word; 
-
-    while (source_code->get_file_buffer().good()) 
-    {
+void Lexer::scan() {    
+    while (source_code->get_file_buffer().good()) {
         char current_char = source_code->get_file_buffer().get(); 
         if(current_char == '\n') {
             ++m_line_number; 

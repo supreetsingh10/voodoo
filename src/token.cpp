@@ -15,6 +15,10 @@ Token::Token() {
 }
 
 Token::~Token() {
+    // TODO 
+    // this is not clearing up heap memory for now. 
+    // check this. 
+
 }
 
 void Token::initialize_map() {
@@ -125,14 +129,13 @@ std::set<std::string> Identifier::m_set_keywords = {
     "let", 
     "for", 
     "loop",
-    "func",
-
-
+    "fn",
+    "pack",
 
 // datatypes. 
     "int", 
-    "str", 
     "deci", 
+    "str", 
 }; 
 
 
@@ -245,7 +248,6 @@ std::map<std::string, Operator> Operators::OperatorMap = {
 {
         "[", Operator(OperatorEnum::RIGHT_SQUARE_BRACKET, 1)
     },
-
 {
         "==", Operator(OperatorEnum::EQUALS, 8)
     },

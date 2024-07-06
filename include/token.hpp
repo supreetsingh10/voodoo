@@ -40,10 +40,11 @@ class Token {
             this->m_line_number = t->m_line_number; 
         }
 
+        virtual Token* make_copy() = 0; 
+
         static void initialize_map(); 
         const TokenTypes get_type() const; 
         const std::string get_value() const; 
-        virtual Token* make_copy() = 0; 
 
         virtual bool parse(char cur, char next) = 0;
         virtual bool parse_end(char cur); 
