@@ -23,7 +23,10 @@ int main() {
 #endif
 
     Parser parser = Parser(); 
-    parser.parse_tokens(*lexy.m_vptokens);
+    parser.set_input_stream(*lexy.m_vptokens);
+
+    parser.parse();
+
 
     return 0; 
 }
