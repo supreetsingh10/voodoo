@@ -18,6 +18,7 @@ enum TokenTypes {
 };
 
 
+/// TODO THE PARSE FUNCTIONS HAVE TO REFACTORED THE FUNCTION NAME PARSE() CAN CREATE CONFUSION IN THE COMING FUTURE.
 class Token {
     public:
         static std::map<char, TokenTypes> m_symbol_map; 
