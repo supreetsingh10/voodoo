@@ -1,29 +1,48 @@
 #pragma once
 #include <string>
 
+enum NodeType {
+    DECLARATION,
+    STATEMENT,
+    EXPRESSION,
+};
+
+enum DeclarationType {
+    VARIABLE,
+    FUNCTION,
+};
+
 struct Node {
     Node() {}
-    ~Node() {}
+    Node(NodeType e): nodetype(e) {}
+    virtual ~Node() {}
+
+    NodeType nodetype;
 };
 
 // Forward declaration 
 struct TypeNode;
+struct ParamNode;
 
-struct DeclarationNode : public Node {
-    DeclarationNode() {}
+
+struct DeclarationNode: public Node {
+    DeclarationNode(): Node(DECLARATION) {}
     virtual ~DeclarationNode() {}
 
+    // has the information about the return type.
     TypeNode* m_type;
+    // Parameters. Can be none. 
+    ParamNode* m_param_type;
+    // points to next declaration 
     DeclarationNode *next; 
 };
 
-enum Types {
+enum ReturnType {
     TYPE_VOID,
     TYPE_INT,
     TYPE_FLOAT,
     TYPE_CHAR,
     TYPE_STRING,
-    TYPE_FUNCTION,
 };
 
 struct TypeNode; 
@@ -40,7 +59,7 @@ struct TypeNode: public Node {
     TypeNode() {}
     virtual ~TypeNode() {}
 
-    Types m_etype;
+    ReturnType m_eReturnType;
     TypeNode* m_subtype;
 };
 
@@ -73,7 +92,8 @@ struct StatementNode: public Node {
         m_expr(expr),
         m_next_expr(next_expr),
         m_body(body),
-        m_else_body(else_body)
+        m_else_body(else_body),
+        Node(STATEMENT)
     {}
 
     virtual ~StatementNode() {}
@@ -96,6 +116,6 @@ enum ExpressionType {
 
 // TODO to set up expressions.
 struct ExpressionNode: public Node {
-    ExpressionNode() {}
+    ExpressionNode(): Node(EXPRESSION) {}
     virtual ~ExpressionNode() {}
 };
