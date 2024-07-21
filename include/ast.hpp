@@ -12,6 +12,14 @@ enum DeclarationType {
     FUNCTION,
 };
 
+enum BlockType {
+    BLOCK_FOR_LOOP,
+    BLOCK_FUNC,
+    BLOCK_IF,
+    BLOCK_ELSE,
+    BLOCK_NORMAL,
+}; 
+
 struct Node {
     Node() {}
     Node(NodeType e): nodetype(e) {}
@@ -23,44 +31,64 @@ struct Node {
 // Forward declaration 
 struct TypeNode;
 struct ParamNode;
+struct StatementNode; 
 
-
-struct DeclarationNode: public Node {
-    DeclarationNode(): Node(DECLARATION) {}
+struct DeclarationNode: public Node 
+{
+    DeclarationNode(): Node(DECLARATION), m_param_node(nullptr), m_stmts(nullptr), next(nullptr) {}
     virtual ~DeclarationNode() {}
 
+    std::string decl_name;
+    DeclarationType decl_type;
     // has the information about the return type.
     TypeNode* m_type;
     // Parameters. Can be none. 
-    ParamNode* m_param_type;
+    ParamNode* m_param_node;
+    // Points to the code inside a declaration. 
+    // Becomes useful when we are working with function declarations.
+    StatementNode* m_stmts;
     // points to next declaration 
     DeclarationNode *next; 
 };
 
-enum ReturnType {
+enum ReturnType 
+{
     TYPE_VOID,
     TYPE_INT,
     TYPE_FLOAT,
     TYPE_CHAR,
     TYPE_STRING,
+    TYPE_USER_DEF,
+    TYPE_INVALID,
 };
 
+
 struct TypeNode; 
-struct ParamNode: public Node {
+// MAJOR REFACTOR
+// Use this to create params for the functions.
+// I can use this to always push to the end tail. 
+struct ParamNode: public Node 
+{
     ParamNode() {}
     virtual ~ParamNode() {}
 
     std::string name;
     TypeNode* m_param_type;
+    // this will be pointing towards the next parameter. 
     ParamNode* next;
 }; 
 
-struct TypeNode: public Node {
+// Do not use this to create params for functions.
+struct TypeNode: public Node 
+{
     TypeNode() {}
     virtual ~TypeNode() {}
 
     ReturnType m_eReturnType;
     TypeNode* m_subtype;
+
+    // MAJOR REFACTOR: Need to add move to a better check system for return type validation
+    ReturnType valid_return_type(const std::string& ret_type); 
 };
 
 enum StatementType {
