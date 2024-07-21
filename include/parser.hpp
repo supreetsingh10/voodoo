@@ -36,13 +36,17 @@ class Parser {
     private: 
         bool parse(Token* current_token); 
         bool parse_decl(Token* current_token, Node* decl_node); 
-        bool parse_block(Token* current_token, Node* block_node); 
+        bool parse_block(Token* current_token, BlockType block_type, StatementNode* block_node); 
+
+        bool parse_var_decl(Token* current_token, DeclarationNode* var_decl_node); 
+        bool block_parse_completed(Token* current_token);
 
         bool parse_fn_decl(Token* current_token, DeclarationNode* fn_decl_node); 
-        bool parse_var_decl(Token* current_token, DeclarationNode* var_decl_node); 
+        bool parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node); 
+        bool allocate_param_memory(Token* current_param_token); 
+        int get_fn_param_count(); 
 
         Node* m_ast_root, *m_trav_node, *m_parsed_node;
-
         int m_Index; 
         std::vector<Token*> m_vpInputTokens; 
 
