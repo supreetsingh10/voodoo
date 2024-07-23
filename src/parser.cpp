@@ -33,7 +33,6 @@ bool Parser::parse(Token* current_token) {
             // This is where we will know what child class to cast
             decl_node->nodetype = DECLARATION;
             parse_decl(current_token, decl_node);
-
         } else {
         
         }
@@ -54,6 +53,14 @@ bool Parser::parse(Token* current_token) {
 bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNode* block_node) {
     // will handle parse_if, parse_else_if, parse_else in this code block as well. 
 
+#if DEBUG_PARSER
+    std::cout << "This is parse block" << std::endl; 
+#endif
+    if (current_token->get_value() == "}") {
+       return true; 
+    } 
+
+    parse_block(current_token, BLOCK_FUNC, nullptr);
     return true;
 }
 
@@ -81,6 +88,17 @@ bool Parser::parse_decl(Token* current_token, Node* decl_node) {
     if(current_token->get_value() == "fn") 
     {
        bool flag = parse_fn_decl(current_token, local_node);
+
+       if(flag) {
+#if DEBUG_PARSER
+    std::cout << local_node->decl_name << std::endl;
+    std::cout << "1" << std::endl;
+    std::cout << local_node->m_param_node->name << std::endl;
+    std::cout << "2" << std::endl;
+    std::cout << local_node->m_param_node->m_param_type->m_eReturnType << std::endl;
+    std::cout << "returned true" << std::endl;
+#endif
+       }
     } 
     else if (current_token->get_value() == "let") 
     {
@@ -93,14 +111,17 @@ bool Parser::parse_decl(Token* current_token, Node* decl_node) {
 
 // this function is not ending
 bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node) {
+    bool b_param_parse = false;
     if(current_token->get_value() == "fn") 
     {
-       if(peek()->get_type() == IDENTIFIER) {
+       if(peek()->get_type() == IDENTIFIER) 
+       {
            decl_node->decl_type = DeclarationType::FUNCTION;
            decl_node->decl_name = peek()->get_value();
            // send the parsing forward;
-           parse_decl(get_next(), decl_node);
-       } else {
+           parse_fn_decl(get_next(), decl_node);
+       } else 
+       {
           assert(!"Invalid syntax. Name of the function is supposed to follow after fn");
        }
     }
@@ -113,38 +134,44 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node) {
 
         // in parse_block we will be making calling new block of memory when we are 
         // parsing new lines in our programming language. 
-        parse_block(current_token, BLOCK_FUNC, statement);
+        // NOTE
+        // Returning this when the parsing of the function block is completed.
+        return parse_block(current_token, BLOCK_FUNC, statement);
     } 
     else if(current_token->get_value() == "(" && peek()->get_value() != ")") 
     {
        // this is parsing fn params.
        // Do not parse the function paramaters if there are none
-       parse_fn_params(current_token, decl_node);
+       b_param_parse = parse_fn_params(current_token, decl_node);
     } 
+    // if current_token name is equal to decl_name that means the fn has been parsed 
+    // and then we should move forward.
+    else if (current_token->get_value() == decl_node->decl_name) 
+    {
+       parse_fn_decl(get_next(), decl_node);
+    } 
+    else if (b_param_parse)
+    {
+        // TODO continue from here. 
+      // parse_fn return type here.   
+    }
 
-
-#if DEBUG_PARSER
-    std::cout << decl_node->decl_name << std::endl;
-    std::cout << decl_node->m_param_node->name << std::endl;
-    std::cout << decl_node->m_param_node->m_param_type->m_eReturnType << std::endl;
-#endif
     return true;
 }
 
 
-bool Parser::allocate_param_memory(Token* current_token) {
+bool Parser::allocate_param_memory(Token* current_token) 
+{
 #if DEBUG_PARSER
-    std::cout << "Came here " << current_token->get_value() << std::endl;
+    std::cout << "4" << current_token->get_value() << std::endl;
 #endif
+
+    // Allocate memory when we are getting ready to parse the new fn parameter
     if (current_token->get_value() == ",") 
-    {
        return true; 
-    } 
-    // in case we have parameters then we to allocate memory for our parameter(s). 
-    else if (current_token->get_value() == "(" && peek()->get_value() != ")") 
-    {
+    // allocate the memory when we are parsing the first paramater of the fn.
+    else if (current_token->get_value() == "(") 
         return true;
-    }
 
     return false;
 }
@@ -152,15 +179,20 @@ bool Parser::allocate_param_memory(Token* current_token) {
 //will not be called when there are no parameters.
 bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node) 
 {
-
     ParamNode* param = nullptr; 
     ParamNode* latest_param = nullptr, *temp = nullptr;
+
     if (allocate_param_memory(current_token)) 
     {
         param = new ParamNode(); 
 
-        if (fn_decl_node->m_param_node == nullptr) 
+        if (fn_decl_node->m_param_node == nullptr)
+        {
+#if DEBUG_PARSER
+            std::cout << "3" << std::endl;
+#endif
            fn_decl_node->m_param_node = param;  
+        }
         else 
         {
             temp = fn_decl_node->m_param_node; 
@@ -189,23 +221,40 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
 
     if (current_token->get_value() == ")") 
     {
+#if DEBUG_PARSER
+        std::cout << "Param parse completed" << std::endl; 
+#endif
+
        return true; 
     } 
     else if (current_token->get_value() == "(") 
     {
-       parse_fn_params(get_next(), fn_decl_node);
+       return parse_fn_params(get_next(), fn_decl_node);
     } 
 
 
     // Will be refactored for now we are working with a system that just checks if the value is a return type
-    if (peek()->get_value() == ":")
-       latest_param->name = get_current()->get_value();  
-    else if (get_current()->get_value() == ":") 
-       latest_param->m_param_type->m_eReturnType = latest_param->m_param_type->valid_return_type(peek()->get_value());; 
+    if (peek()->get_value() == ":") 
+       latest_param->name = current_token->get_value();  
+    else if (current_token->get_value() == ":") 
+    {
+       ReturnType param_type = latest_param->m_param_type->valid_return_type(peek()->get_value());
+       if (param_type == TYPE_INVALID) 
+       {
+          std::cerr << "Invalid type in code: " << peek()->get_value() << std::endl;
+          // assert established for debugging otherwise it should be returning false in relases mode.
+          assert(false); 
+          return false; 
+       }
 
-    parse_fn_params(get_next(), fn_decl_node);
+       // new TypeNode memory being called here. 
+       // Need to clean up the memory
+       latest_param->m_param_type = new TypeNode(); 
+       latest_param->m_param_type->m_eReturnType = param_type;
+    }
+
+    return parse_fn_params(get_next(), fn_decl_node);
     
-    return true;
 }
 
 // So this will be checking if the current token is a declation;
