@@ -10,16 +10,20 @@ SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
 INCLUDE := $(shell find $(INC_DIR) -name '*.hpp')
 OBJS := $(patsubst %.c, %.o, $(SRCS))
 
-CXX_FLAGS := -Wall -Wextra -g $(foreach D, $(INCLUDE), -I$(wildcard $(D)/*.hpp))
+#CXX_FLAGS := -Wall -Wextra -g $(foreach D, $(INCLUDE), -I$(wildcard $(INC_D)/*.hpp))
+CXX_FLAGS := -Wall -Wextra -g 
 
 all: $(BINARY)
 	echo $(BINARY)
 
 $(BINARY): $(OBJS)
-	$(CXX) -o $@ $^
+	$(CXX) $(CXX_FLAGS) -o $@ $^
 
 clean: 
 	rm -rf $(BUILD_DIR)/*
 
 run: $(BINARY)
 	./$(BINARY)
+
+debug:
+	gdb ./$(BINARY)
