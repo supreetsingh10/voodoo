@@ -2,7 +2,7 @@
 // tokens can be of type identifier, operator, literals.
 // Abstract class, where the token types can change. 
 // Tokens can be of type Interger, Identifier, Literal 
-#define TOKENSHOWER true
+#define TOKENSHOWER false
 #if TOKENSHOWER
 #include <iostream>
 #endif
