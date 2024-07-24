@@ -41,7 +41,7 @@ struct DeclarationNode: public Node
     std::string decl_name;
     DeclarationType decl_type;
     // has the information about the return type.
-    TypeNode* m_type;
+    TypeNode* m_type_node;
     // Parameters. Can be none. 
     ParamNode* m_param_node;
     // Points to the code inside a declaration. 
@@ -69,7 +69,7 @@ struct TypeNode;
 // I can use this to always push to the end tail. 
 struct ParamNode: public Node 
 {
-    ParamNode() {}
+    ParamNode(): m_param_type() {}
     virtual ~ParamNode() {}
 
     std::string name;
@@ -88,7 +88,7 @@ struct TypeNode: public Node
     TypeNode* m_subtype;
 
     // MAJOR REFACTOR: Need to add move to a better check system for return type validation
-    ReturnType valid_return_type(const std::string& ret_type); 
+    static ReturnType valid_return_type(const std::string& ret_type); 
 };
 
 enum StatementType {
