@@ -34,21 +34,31 @@ class Parser {
         bool get_current_block_level();
 
     private: 
+        // master functions.
         bool parse(Token* current_token); 
         bool parse_decl(Token* current_token, Node* decl_node); 
         bool parse_block(Token* current_token, BlockType block_type, StatementNode* block_node); 
+        // master parsing functions end.
 
         bool parse_var_decl(Token* current_token, DeclarationNode* var_decl_node); 
+        bool parse_local_var_decl(Token* current_token);
         bool block_parse_completed(Token* current_token);
 
         bool parse_fn_decl(Token* current_token, DeclarationNode* fn_decl_node); 
         bool parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node); 
+
         bool allocate_param_memory(Token* current_param_token); 
+
         int get_fn_param_count(); 
 
         Node* m_ast_root, *m_trav_node, *m_parsed_node;
-        int m_Index; 
-        std::vector<Token*> m_vpInputTokens; 
+        size_t m_Index; 
 
-        std::stack<int> m_sBlockCounter;
+    private:
+        // statement parsing functions.
+        bool allocate_stmt_memory(Token* current_stmt_token);
+        void block_parse_counter(Token* current_token); 
+
+        std::vector<Token*> m_vpInputTokens; 
+        std::stack<char> m_sBlockStack;
 };
