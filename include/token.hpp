@@ -7,7 +7,8 @@
 #include <string>
 #include "../include/operators.hpp"
 
-enum TokenTypes {
+enum TokenTypes 
+{
     NONE,
     WHITESPACE,
     IDENTIFIER, // variables and all. fn name. 
@@ -19,7 +20,8 @@ enum TokenTypes {
 
 
 /// TODO THE PARSE FUNCTIONS HAVE TO REFACTORED THE FUNCTION NAME PARSE() CAN CREATE CONFUSION IN THE COMING FUTURE.
-class Token {
+class Token 
+{
     public:
         static std::map<char, TokenTypes> m_symbol_map; 
         static TokenTypes get_type(char c); 
@@ -35,7 +37,8 @@ class Token {
     public:
         Token(); 
         virtual ~Token(); 
-        Token(const Token* t) {
+        Token(const Token* t) 
+        {
             this->token_type = t->token_type;
             this->token_value = t->token_value; 
             this->m_line_number = t->m_line_number; 
@@ -54,7 +57,8 @@ class Token {
         virtual void set_line_number(const uint32_t line_number); 
 }; 
 
-class Literal : public Token {
+class Literal : public Token 
+{
     private:
         static std::set<TokenTypes> m_compatible_types; 
 
