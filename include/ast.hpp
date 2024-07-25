@@ -59,9 +59,15 @@ enum ReturnType
     TYPE_CHAR,
     TYPE_STRING,
     TYPE_USER_DEF,
+    TYPE_COMPOUND,
     TYPE_INVALID,
 };
 
+enum CompoundTypes
+{
+    TYPE_ARRAY,
+    TYPE_MAP,
+};
 
 struct TypeNode; 
 // MAJOR REFACTOR
