@@ -1,4 +1,5 @@
 #include "../include/parser.hpp"
+#include <bits/fs_fwd.h>
 #include <cassert>
 #include <vector>
 #include <iostream>
@@ -45,23 +46,103 @@ bool Parser::parse(Token* current_token) {
             // In the coming time we will have to dynamic cast the nodes to required child classes. 
             // This is where we will know what child class to cast
             decl_node->nodetype = DECLARATION;
-            parse_decl(current_token, decl_node);
+            m_bStartNodeSet = parse_decl(current_token, decl_node);
+
+            if(!m_bStartNodeSet) 
+            {
+               m_StartNode = decl_node;
+               m_bStartNodeSet = true;
+#if DEBUG_PARSER
+               DeclarationNode *test = dynamic_cast<DeclarationNode*>(m_StartNode);
+               StatementNode* st = test->m_stmts;
+               while (!st) 
+               {
+                   std::cout << "FN STMT DECLS " << st->m_stmt_decl->decl_name << std::endl;
+                   st = st->next;
+               }
+#endif
+            }
         }    
     } 
     return true;
 }
 
+bool Parser::allocate_stmt_memory(Token* current_stmt_token) 
+{
+    if (current_stmt_token->get_value() == ";") 
+       return true; 
+
+    return false;
+}
+
 // parsing of block should end when the last "}" is reached for a block. 
 bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNode* block_node) 
 {
-    // will handle parse_if, parse_else_if, parse_else in this code block as well. 
-#if DEBUG_PARSER
-    std::cout << "This is parse block" << std::endl; 
-#endif
     if (current_token->get_value() == "}") 
+    {
+       block_level_updater(current_token);
        return true; 
+    }
+    
 
-    parse_block(get_next(), block_type, nullptr);
+    StatementNode* temp_node = nullptr;
+
+    if(allocate_stmt_memory(current_token)) 
+    {
+       // this will chain our statement blocks. 
+       temp_node = new StatementNode();  
+       block_node->next = temp_node; 
+    }  
+    else
+        temp_node = block_node;
+
+    DeclType local_decl_type = check_for_declartions(current_token);
+    if (local_decl_type != DECL_NONE) 
+    {
+        if (local_decl_type == DECL_FN) 
+        {
+           std::cerr << "Cannot declare functions inside a block" << std::endl;
+           assert(false);
+           return false; 
+        } 
+        else if (local_decl_type == DECL_VAR) 
+        {
+            DeclarationNode* local_decl_node = new DeclarationNode();
+
+            if (temp_node == nullptr) 
+            {
+                std::cerr << "Statement node happens to be null" << std::endl; 
+                assert(false);
+            }
+                
+
+            if (temp_node->m_stmt_decl == nullptr) 
+            {
+                temp_node->m_stmt_decl = local_decl_node;
+            } 
+            else 
+            {
+                // we will always need a latest node.
+                DeclarationNode* latest_decl = nullptr;
+
+                while (latest_decl->next != nullptr) 
+                    latest_decl = latest_decl->next;
+
+                latest_decl->next = local_decl_node;
+            }
+
+            if(!parse_var_decl(current_token, local_decl_node)) 
+            {
+                std::cerr << "Failed to parse the local variable " << current_token->get_value() << std::endl; 
+                assert(false);
+            }
+
+        }
+
+    }
+
+
+    parse_block(get_next(), block_type, temp_node);
     return true;
 }
 
@@ -84,12 +165,10 @@ bool Parser::block_parse_completed(Token* current_token)
 }
 
 
-void Parser::block_parse_counter(Token* current_token) 
+void Parser::block_level_updater(Token* current_token) 
 {
     if (current_token->get_value() == "{") 
-    {
         m_sBlockStack.push('{');
-    }
     else if (current_token->get_value() == "}") 
     {
         if (m_sBlockStack.size() == 0) {
@@ -99,10 +178,8 @@ void Parser::block_parse_counter(Token* current_token)
 
         m_sBlockStack.pop();
     }
-    else
-        return;
-
 }
+
 
 // this will be creating a declation object which will be storing the required values. 
 // we will typecast
@@ -113,29 +190,55 @@ bool Parser::parse_decl(Token* current_token, Node* decl_node) {
     {
        bool flag = parse_fn_decl(current_token, local_node);
 
-       if(flag) {
+       if(flag)
+       {
+
 #if DEBUG_PARSER
     std::cout << local_node->decl_name << std::endl;
-    std::cout << "1" << std::endl;
     std::cout << local_node->m_param_node->name << std::endl;
-    std::cout << "2" << std::endl;
     std::cout << local_node->m_param_node->m_param_type->m_eReturnType << std::endl;
-    std::cout << "returned true" << std::endl;
 #endif
        }
     } 
     else if (current_token->get_value() == "let") 
     {
         // commented for now
-        // parse_var_decl(current_token, local_node);
+        parse_var_decl(current_token, local_node);
     }
+
+    return true;
+}
+
+bool Parser::parse_var_decl(Token* current_token, DeclarationNode* var_decl_node)  
+{
+    if(current_token->get_value() == ";") 
+       return true; 
+    else if (current_token->get_value() == "let") 
+        var_decl_node->decl_name = peek()->get_value(); 
+    else if (current_token->get_value() == ":") 
+    {
+       ReturnType var_type = TypeNode::valid_return_type(peek()->get_value());
+       if (var_type == TYPE_INVALID) 
+       {
+          std::cerr << "Invalid type in code: " << peek()->get_value() << std::endl;
+          // assert established for debugging otherwise it should be returning false in relases mode.
+          assert(false); 
+          return false; 
+       }
+
+       var_decl_node->m_type_node = new TypeNode(); 
+       var_decl_node->m_type_node->m_eReturnType = var_type;
+    }
+
+    parse_var_decl(get_next(), var_decl_node);
 
     return true;
 }
 
 
 // this function is not ending
-bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node) {
+bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node) 
+{
     if(current_token->get_value() == "fn") 
     {
        if (peek()->get_type() == IDENTIFIER) 
@@ -146,29 +249,10 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node) {
            parse_fn_decl(get_next(), decl_node);
        } 
        else 
-       {
           assert(!"Invalid syntax. Name of the function is supposed to follow after fn");
-       }
     }
-    else if (current_token->get_value() == "{") 
-    {
-        // start parsing block
-        // initialize a statement block
-        StatementNode* statement = new StatementNode();
-        decl_node->m_stmts = statement;
-
-        // in parse_block we will be making calling new block of memory when we are 
-        // parsing new lines in our programming language. 
-        // NOTE
-        // Returning this when the parsing of the function block is completed.
-        return parse_block(current_token, BLOCK_FUNC, statement);
-    } 
     else if(current_token->get_value() == "(" && peek()->get_value() != ")") 
-    {
-       // this is parsing fn params.
-       // Do not parse the function paramaters if there are none
        parse_fn_params(current_token, decl_node);
-    } 
     // if current_token name is equal to decl_name that means the fn has been parsed 
     // and then we should move forward.
     else if (current_token->get_value() == decl_node->decl_name) 
@@ -183,6 +267,18 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node) {
 
        decl_node->m_type_node->m_eReturnType = TypeNode::valid_return_type(peek()->get_value());
     }
+    else if (current_token->get_value() == "{") 
+    {
+        StatementNode* statement = new StatementNode();
+        decl_node->m_stmts = statement;
+
+        // parse_block will return true everytime a block has been parsed. 
+        // this means when our stack top { comes across a new char which is } 
+        // We want to return from the block then 
+
+        block_level_updater(current_token);
+        return parse_block(current_token, BLOCK_FUNC, statement);
+    } 
 
     return true;
 }
@@ -190,10 +286,6 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node) {
 
 bool Parser::allocate_param_memory(Token* current_token) 
 {
-#if DEBUG_PARSER
-    std::cout << "4" << current_token->get_value() << std::endl;
-#endif
-
     // Allocate memory when we are getting ready to parse the new fn parameter
     if (current_token->get_value() == ",") 
        return true; 
@@ -251,6 +343,7 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
 
     if (current_token->get_value() == ")") 
     {
+
 #if DEBUG_PARSER
         std::cout << "Param parse completed" << std::endl; 
 #endif
@@ -287,7 +380,6 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
 }
 
 // So this will be checking if the current token is a declation;
-// Need to add more declaration keywords
 Parser::DeclType Parser::check_for_declartions(Token* current_token) 
 {
     if (current_token->get_value() == "fn")
