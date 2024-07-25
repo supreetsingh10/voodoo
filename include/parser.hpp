@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <sys/types.h>
 #include <vector>
 #include "./token.hpp"
 #include "./ast.hpp"
@@ -8,7 +9,7 @@
 
 class Parser {
     public: 
-        Parser(): m_ast_root(nullptr), m_trav_node(nullptr), m_Index((0)) {} 
+        Parser(): m_StartNode(nullptr), m_Index((0)), m_bStartNodeSet(false) {} 
         ~Parser() {} 
 
         Token* get_next(); 
@@ -41,7 +42,6 @@ class Parser {
         // master parsing functions end.
 
         bool parse_var_decl(Token* current_token, DeclarationNode* var_decl_node); 
-        bool parse_local_var_decl(Token* current_token);
         bool block_parse_completed(Token* current_token);
 
         bool parse_fn_decl(Token* current_token, DeclarationNode* fn_decl_node); 
@@ -51,13 +51,14 @@ class Parser {
 
         int get_fn_param_count(); 
 
-        Node* m_ast_root, *m_trav_node, *m_parsed_node;
+        Node* m_StartNode; 
+        bool m_bStartNodeSet; 
         size_t m_Index; 
 
     private:
         // statement parsing functions.
         bool allocate_stmt_memory(Token* current_stmt_token);
-        void block_parse_counter(Token* current_token); 
+        void block_level_updater(Token* current_token); 
 
         std::vector<Token*> m_vpInputTokens; 
         std::stack<char> m_sBlockStack;
