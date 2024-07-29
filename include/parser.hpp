@@ -13,6 +13,7 @@ class Parser {
         ~Parser() {} 
 
         Token* get_next(); 
+        Token* skip_and_get(const size_t& skip_num); 
         Token* peek();
         Token* get_current(); 
 
