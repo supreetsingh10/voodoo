@@ -11,7 +11,8 @@ Lexer::~Lexer() {
 }
 
 
-void Lexer::read_file(const std::string& file_name) {
+void Lexer::read_file(const std::string& file_name) 
+{
     source_code = std::make_unique<Source>();
     source_code->initialize(file_name);
 }

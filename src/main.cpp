@@ -1,6 +1,6 @@
 #include "../include/lexer.hpp"
 
-#define TOKENSHOWER false
+#define TOKENSHOWER true
 #if TOKENSHOWER
 #include <iostream>
 #endif
