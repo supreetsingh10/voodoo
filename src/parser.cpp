@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 
+
 #define DEBUG_PARSER true
 
 
@@ -21,10 +22,10 @@ bool Parser::parse()
 
         if (!success_parse)
             return false;
-        else 
+        else
             m_Index++;
-        
     }
+
 
     return true;
 }
@@ -62,9 +63,18 @@ bool Parser::parse(Token* current_token) {
                }
 #endif
             }
-        }    
-    } 
+        }
+    }
+
     return true;
+}
+
+Token* Parser::skip_and_get(const size_t& skip_num) 
+{
+    assert(skip_num + m_Index < m_vpInputTokens.size());
+    m_Index += skip_num;
+
+    return  m_vpInputTokens[m_Index];
 }
 
 bool Parser::allocate_stmt_memory(Token* current_stmt_token) 
@@ -83,7 +93,7 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
        block_level_updater(current_token);
        return true; 
     }
-    
+
 
     StatementNode* temp_node = nullptr;
 
@@ -114,7 +124,7 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
                 std::cerr << "Statement node happens to be null" << std::endl; 
                 assert(false);
             }
-                
+
 
             if (temp_node->m_stmt_decl == nullptr) 
             {
@@ -228,6 +238,10 @@ bool Parser::parse_var_decl(Token* current_token, DeclarationNode* var_decl_node
 
        var_decl_node->m_type_node = new TypeNode(); 
        var_decl_node->m_type_node->m_eReturnType = var_type;
+    } 
+    else if (current_token->get_value() == "=") 
+    {
+    
     }
 
     parse_var_decl(get_next(), var_decl_node);
@@ -251,25 +265,39 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
        else 
           assert(!"Invalid syntax. Name of the function is supposed to follow after fn");
     }
-    else if(current_token->get_value() == "(" && peek()->get_value() != ")") 
-       parse_fn_params(current_token, decl_node);
+    else if(current_token->get_value() == "(" && peek()->get_value() != ")") {
+       if(!parse_fn_params(current_token, decl_node)) 
+        {
+            std::cerr << "Failed to parse fn parameters" << std::endl; 
+            assert(false); 
+            return false;
+        }
+
+        // this will be going foward in order to parse the block. 
+        parse_fn_decl(get_next(), decl_node); 
+
+    }
     // if current_token name is equal to decl_name that means the fn has been parsed 
     // and then we should move forward.
-    else if (current_token->get_value() == decl_node->decl_name) 
-    {
+    else if (current_token->get_value() == decl_node->decl_name)
        parse_fn_decl(get_next(), decl_node);
-    } 
+     // this is parsing the function return type
     else if (current_token->get_value() == ":") 
     {
-       // parse the function return type here.  
        if (!decl_node->m_type_node) 
            decl_node->m_type_node = new TypeNode();
 
        decl_node->m_type_node->m_eReturnType = TypeNode::valid_return_type(peek()->get_value());
-    }
+
+        parse_fn_decl(skip_and_get(2) ,decl_node);
+    } 
+
     else if (current_token->get_value() == "{") 
     {
+        std::cout << "coming for block" << std::endl;
         StatementNode* statement = new StatementNode();
+        assert(decl_node != nullptr);
+
         decl_node->m_stmts = statement;
 
         // parse_block will return true everytime a block has been parsed. 
@@ -376,7 +404,6 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
     }
 
     return parse_fn_params(get_next(), fn_decl_node);
-    
 }
 
 // So this will be checking if the current token is a declation;
