@@ -1,4 +1,5 @@
 #pragma once
+#include "datatypes.hpp"
 #include <string>
 
 enum NodeType {
@@ -20,12 +21,14 @@ enum BlockType {
     BLOCK_NORMAL,
 }; 
 
-struct Node {
+struct Node 
+{
     Node() {}
     Node(NodeType e): nodetype(e) {}
     virtual ~Node() {}
 
     NodeType nodetype;
+    static void describe_tree(Node* n); 
 };
 
 // Forward declaration 
@@ -36,7 +39,8 @@ struct StatementNode;
 struct DeclarationNode: public Node 
 {
     DeclarationNode(): Node(DECLARATION), m_param_node(nullptr), m_stmts(nullptr), next(nullptr) {}
-    virtual ~DeclarationNode() {}
+    virtual ~DeclarationNode();
+
 
     std::string decl_name;
     DeclarationType decl_type;
@@ -49,24 +53,8 @@ struct DeclarationNode: public Node
     StatementNode* m_stmts;
     // points to next declaration 
     DeclarationNode *next; 
-};
 
-enum ReturnType 
-{
-    TYPE_VOID,
-    TYPE_INT,
-    TYPE_FLOAT,
-    TYPE_CHAR,
-    TYPE_STRING,
-    TYPE_USER_DEF,
-    TYPE_COMPOUND,
-    TYPE_INVALID,
-};
-
-enum CompoundTypes
-{
-    TYPE_ARRAY,
-    TYPE_MAP,
+    static void describe_decl(DeclarationNode* dn);
 };
 
 struct TypeNode; 
@@ -76,7 +64,7 @@ struct TypeNode;
 struct ParamNode: public Node 
 {
     ParamNode(): m_param_type() {}
-    virtual ~ParamNode() {}
+    virtual ~ParamNode();
 
     std::string name;
     TypeNode* m_param_type;
@@ -88,13 +76,16 @@ struct ParamNode: public Node
 struct TypeNode: public Node 
 {
     TypeNode() {}
-    virtual ~TypeNode() {}
+    virtual ~TypeNode();
 
-    ReturnType m_eReturnType;
+    DataType* m_data_node;
     TypeNode* m_subtype;
+    static void describe_type(TypeNode* t); 
 
     // MAJOR REFACTOR: Need to add move to a better check system for return type validation
-    static ReturnType valid_return_type(const std::string& ret_type); 
+    // static ReturnType valid_return_type(const std::string& ret_type); 
+    static DataType* validate_token_type(const std::string& dat_type); 
+
 };
 
 enum StatementType {
@@ -130,14 +121,18 @@ struct StatementNode: public Node {
         Node(STATEMENT)
     {}
 
-    virtual ~StatementNode() {}
+    virtual ~StatementNode();
 
     StatementType m_stmt_type;
     // Member objects
     DeclarationNode* m_stmt_decl;
     ExpressionNode* m_init_expr, *m_expr, *m_next_expr;
-    StatementNode* m_body, *m_else_body;
+    StatementNode* m_body, *m_else_body; 
+    // In case there are sub blocks in the statement.
+    StatementNode* m_normal_block;
     StatementNode* next;
+
+    static void describe_stmt(StatementNode* s);
 };
 
 
