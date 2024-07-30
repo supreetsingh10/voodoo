@@ -1,5 +1,4 @@
 #include "../include/parser.hpp"
-#include <bits/fs_fwd.h>
 #include <cassert>
 #include <vector>
 #include <iostream>
@@ -49,7 +48,10 @@ bool Parser::parse(Token* current_token) {
             decl_node->nodetype = DECLARATION;
             m_bStartNodeSet = parse_decl(current_token, decl_node);
 
-            if(!m_bStartNodeSet) 
+            std::cerr << " WORK ON THIS " << std::endl;
+            assert(false);
+
+            if(m_bStartNodeSet) 
             {
                m_StartNode = decl_node;
                m_bStartNodeSet = true;
@@ -77,6 +79,7 @@ Token* Parser::skip_and_get(const size_t& skip_num)
     return  m_vpInputTokens[m_Index];
 }
 
+// if we are on the end of the statement then we are doing this.
 bool Parser::allocate_stmt_memory(Token* current_stmt_token) 
 {
     if (current_stmt_token->get_value() == ";") 
@@ -88,7 +91,12 @@ bool Parser::allocate_stmt_memory(Token* current_stmt_token)
 // parsing of block should end when the last "}" is reached for a block. 
 bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNode* block_node) 
 {
-    if (current_token->get_value() == "}") 
+
+    if(current_token->get_value() == "{" && block_node == nullptr) 
+    {
+        block_node = new StatementNode(); 
+    }
+    else if (current_token->get_value() == "}") 
     {
        block_level_updater(current_token);
        return true; 
@@ -102,7 +110,7 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
        // this will chain our statement blocks. 
        temp_node = new StatementNode();  
        block_node->next = temp_node; 
-    }  
+    }
     else
         temp_node = block_node;
 
@@ -129,14 +137,14 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
             if (temp_node->m_stmt_decl == nullptr) 
             {
                 temp_node->m_stmt_decl = local_decl_node;
-            } 
-            else 
+            }
+            else
             {
                 // we will always need a latest node.
-                DeclarationNode* latest_decl = nullptr;
+                DeclarationNode* latest_decl = temp_node->m_stmt_decl;
 
-                while (latest_decl->next != nullptr) 
-                    latest_decl = latest_decl->next;
+                while(latest_decl->next != nullptr)
+                    latest_decl = latest_decl->next; 
 
                 latest_decl->next = local_decl_node;
             }
@@ -202,11 +210,8 @@ bool Parser::parse_decl(Token* current_token, Node* decl_node) {
 
        if(flag)
        {
-
 #if DEBUG_PARSER
-    std::cout << local_node->decl_name << std::endl;
-    std::cout << local_node->m_param_node->name << std::endl;
-    std::cout << local_node->m_param_node->m_param_type->m_eReturnType << std::endl;
+            Node::describe_tree(decl_node);
 #endif
        }
     } 
@@ -227,8 +232,8 @@ bool Parser::parse_var_decl(Token* current_token, DeclarationNode* var_decl_node
         var_decl_node->decl_name = peek()->get_value(); 
     else if (current_token->get_value() == ":") 
     {
-       ReturnType var_type = TypeNode::valid_return_type(peek()->get_value());
-       if (var_type == TYPE_INVALID) 
+       DataType* var_type = TypeNode::validate_token_type(peek()->get_value());
+       if (var_type->m_data_type == TYPE_INVALID) 
        {
           std::cerr << "Invalid type in code: " << peek()->get_value() << std::endl;
           // assert established for debugging otherwise it should be returning false in relases mode.
@@ -237,11 +242,19 @@ bool Parser::parse_var_decl(Token* current_token, DeclarationNode* var_decl_node
        }
 
        var_decl_node->m_type_node = new TypeNode(); 
-       var_decl_node->m_type_node->m_eReturnType = var_type;
-    } 
+       var_decl_node->m_type_node->m_data_node = var_type;
+    }
     else if (current_token->get_value() == "=") 
     {
-    
+        if (var_decl_node->m_type_node == nullptr) 
+        {
+            std::cerr << "Type node found null" << std::endl;
+            assert(false);
+            return false;
+        }
+
+        var_decl_node->m_type_node->m_data_node->m_data_value = get_next()->get_value();
+
     }
 
     parse_var_decl(get_next(), var_decl_node);
@@ -287,7 +300,7 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
        if (!decl_node->m_type_node) 
            decl_node->m_type_node = new TypeNode();
 
-       decl_node->m_type_node->m_eReturnType = TypeNode::valid_return_type(peek()->get_value());
+       decl_node->m_type_node->m_data_node = TypeNode::validate_token_type(peek()->get_value());
 
         parse_fn_decl(skip_and_get(2) ,decl_node);
     } 
@@ -295,17 +308,21 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
     else if (current_token->get_value() == "{") 
     {
         std::cout << "coming for block" << std::endl;
-        StatementNode* statement = new StatementNode();
+        StatementNode* out_statement = nullptr;
         assert(decl_node != nullptr);
-
-        decl_node->m_stmts = statement;
 
         // parse_block will return true everytime a block has been parsed. 
         // this means when our stack top { comes across a new char which is } 
         // We want to return from the block then 
 
         block_level_updater(current_token);
-        return parse_block(current_token, BLOCK_FUNC, statement);
+        bool flag = parse_block(current_token, BLOCK_FUNC, out_statement);
+
+        decl_node->m_stmts = out_statement;
+
+        // Utils::log_fn_tree(decl_node);
+
+        return flag;
     } 
 
     return true;
@@ -388,8 +405,8 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
        latest_param->name = current_token->get_value();  
     else if (current_token->get_value() == ":") 
     {
-       ReturnType param_type = TypeNode::valid_return_type(peek()->get_value());
-       if (param_type == TYPE_INVALID) 
+       DataType* param_type = TypeNode::validate_token_type(peek()->get_value());
+       if (param_type->m_data_type == TYPE_INVALID) 
        {
           std::cerr << "Invalid type in code: " << peek()->get_value() << std::endl;
           // assert established for debugging otherwise it should be returning false in relases mode.
@@ -400,7 +417,7 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
        // new TypeNode memory being called here. 
        // Need to clean up the memory
        latest_param->m_param_type = new TypeNode(); 
-       latest_param->m_param_type->m_eReturnType = param_type;
+       latest_param->m_param_type->m_data_node = param_type;
     }
 
     return parse_fn_params(get_next(), fn_decl_node);
