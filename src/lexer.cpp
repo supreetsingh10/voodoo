@@ -4,7 +4,8 @@
 #include <memory>
 #include "../include/utilities.hpp"
 
-Lexer::~Lexer() {
+Lexer::~Lexer() 
+{
     Utils::logger("Destructed");
     assert(m_vptokens->size() != 0);
     SAFE_RELEASE_VECTOR(*m_vptokens);
@@ -21,7 +22,8 @@ void Lexer::read_file(const std::string& file_name)
 // this should have functions which will check if
 // the token generated is a keyword.
 // Operator's type
-void Lexer::tokenize() {
+void Lexer::tokenize() 
+{
     if(m_pcurrent_token->get_type() == TokenTypes::IDENTIFIER) 
     {
         Identifier* iden = dynamic_cast<Identifier*>(m_pcurrent_token); 
