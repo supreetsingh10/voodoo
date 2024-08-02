@@ -19,7 +19,7 @@ enum TokenTypes
 };
 
 
-/// TODO THE PARSE FUNCTIONS HAVE TO REFACTORED THE FUNCTION NAME PARSE() CAN CREATE CONFUSION IN THE COMING FUTURE.
+// TODO THE PARSE FUNCTIONS HAVE TO REFACTORED THE FUNCTION NAME PARSE() CAN CREATE CONFUSION IN THE COMING FUTURE.
 class Token 
 {
     public:
@@ -73,7 +73,8 @@ class Literal : public Token
     public:
         Literal(); 
         virtual ~Literal(); 
-        Literal(const Literal* l) {
+        Literal(const Literal* l) 
+        {
             this->token_type = l->token_type;
             this->token_value = l->token_value;
             this->m_line_number = l->m_line_number;
@@ -96,7 +97,8 @@ class Identifier : public Token {
     public:
         Identifier(); 
         virtual ~Identifier(); 
-        Identifier(const Identifier* i) {
+        Identifier(const Identifier* i) 
+        {
             this->token_type = i->token_type;
             this->token_value = i->token_value; 
             this->m_line_number = i->m_line_number; 

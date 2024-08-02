@@ -38,6 +38,7 @@ void Token::initialize_map() {
     m_symbol_map.insert(std::make_pair(' ', TokenTypes::WHITESPACE));
     m_symbol_map.insert(std::make_pair('\n', TokenTypes::WHITESPACE));
     m_symbol_map.insert(std::make_pair('\r', TokenTypes::WHITESPACE));
+    m_symbol_map.insert(std::make_pair('\t', TokenTypes::WHITESPACE));
 
 }
 
@@ -136,6 +137,11 @@ std::set<std::string> Identifier::m_set_keywords = {
     "int", 
     "deci", 
     "str", 
+
+//  confiditionals
+    "if",
+    "elif",
+    "else"
 }; 
 
 
