@@ -25,14 +25,14 @@ bool Parser::parse()
             m_Index++;
     }
 
-
     return true;
 }
 
 // this function will be recursive. 
 // I want to build a tree using this class which will have the root on m_pRoot. 
 // I will be building different rules for this. 
-bool Parser::parse(Token* current_token) {
+bool Parser::parse(Token* current_token) 
+{
     int block_levels = get_current_block_level();
 
     // if we are not in a block
@@ -48,22 +48,11 @@ bool Parser::parse(Token* current_token) {
             decl_node->nodetype = DECLARATION;
             m_bStartNodeSet = parse_decl(current_token, decl_node);
 
-            std::cerr << " WORK ON THIS " << std::endl;
-            assert(false);
 
             if(m_bStartNodeSet) 
             {
                m_StartNode = decl_node;
                m_bStartNodeSet = true;
-#if DEBUG_PARSER
-               DeclarationNode *test = dynamic_cast<DeclarationNode*>(m_StartNode);
-               StatementNode* st = test->m_stmts;
-               while (!st) 
-               {
-                   std::cout << "FN STMT DECLS " << st->m_stmt_decl->decl_name << std::endl;
-                   st = st->next;
-               }
-#endif
             }
         }
     }
@@ -91,17 +80,11 @@ bool Parser::allocate_stmt_memory(Token* current_stmt_token)
 // parsing of block should end when the last "}" is reached for a block. 
 bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNode* block_node) 
 {
-
-    if(current_token->get_value() == "{" && block_node == nullptr) 
-    {
-        block_node = new StatementNode(); 
-    }
-    else if (current_token->get_value() == "}") 
+    if (current_token->get_value() == "}") 
     {
        block_level_updater(current_token);
        return true; 
     }
-
 
     StatementNode* temp_node = nullptr;
 
@@ -113,6 +96,8 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
     }
     else
         temp_node = block_node;
+
+    assert(temp_node != nullptr && "The temp node is null");
 
     DeclType local_decl_type = check_for_declartions(current_token);
     if (local_decl_type != DECL_NONE) 
@@ -131,37 +116,59 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
             {
                 std::cerr << "Statement node happens to be null" << std::endl; 
                 assert(false);
+                return false;
             }
 
 
             if (temp_node->m_stmt_decl == nullptr) 
-            {
                 temp_node->m_stmt_decl = local_decl_node;
-            }
+
             else
             {
-                // we will always need a latest node.
                 DeclarationNode* latest_decl = temp_node->m_stmt_decl;
+
+                assert(latest_decl != nullptr && "Declaration is null here");
 
                 while(latest_decl->next != nullptr)
                     latest_decl = latest_decl->next; 
-
                 latest_decl->next = local_decl_node;
+
             }
 
             if(!parse_var_decl(current_token, local_decl_node)) 
             {
                 std::cerr << "Failed to parse the local variable " << current_token->get_value() << std::endl; 
                 assert(false);
+                return false;
             }
 
         }
+    } 
+    // if it is a { and we are already in a block then I want to create a new block and parse it as well.
+    else if (current_token->get_value() == "{") 
+    {
+        assert(temp_node != nullptr);
+        // always get the latest node in the code block.
+        StatementNode* local_code_block = temp_node->m_code_block;
 
+        block_level_updater(current_token);
+        while (local_code_block != nullptr) 
+            local_code_block = local_code_block->next;
+
+        local_code_block = new StatementNode(); 
+        parse_block(get_next(), BLOCK_NORMAL, local_code_block);
     }
 
+    // TODO Need to add the else block here,
+    // These blocks will have if, if else, and else statements. 
 
-    parse_block(get_next(), block_type, temp_node);
+    parse_block(get_next(), block_type, block_node);
     return true;
+}
+
+bool Parser::parse_if(Token* current_token, BlockType if_block, StatementNode* block_type)
+{
+    return false;
 }
 
 
@@ -201,7 +208,8 @@ void Parser::block_level_updater(Token* current_token)
 
 // this will be creating a declation object which will be storing the required values. 
 // we will typecast
-bool Parser::parse_decl(Token* current_token, Node* decl_node) {
+bool Parser::parse_decl(Token* current_token, Node* decl_node) 
+{
     DeclarationNode* local_node = dynamic_cast<DeclarationNode*>(decl_node); 
 
     if(current_token->get_value() == "fn") 
@@ -308,8 +316,8 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
     else if (current_token->get_value() == "{") 
     {
         std::cout << "coming for block" << std::endl;
-        StatementNode* out_statement = nullptr;
-        assert(decl_node != nullptr);
+        StatementNode* out_statement = new StatementNode();
+        assert(decl_node != nullptr && "Decl node cannot be a nullptr");
 
         // parse_block will return true everytime a block has been parsed. 
         // this means when our stack top { comes across a new char which is } 
@@ -318,10 +326,10 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
         block_level_updater(current_token);
         bool flag = parse_block(current_token, BLOCK_FUNC, out_statement);
 
+        assert(flag && "Failed to parse block");
+        assert(out_statement != nullptr && "Out statement is nullptr");
+
         decl_node->m_stmts = out_statement;
-
-        // Utils::log_fn_tree(decl_node);
-
         return flag;
     } 
 
@@ -352,14 +360,7 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
         param = new ParamNode(); 
 
         if (fn_decl_node->m_param_node == nullptr)
-        {
-
-#if DEBUG_PARSER
-            std::cout << "3" << std::endl;
-#endif
-
            fn_decl_node->m_param_node = param;  
-        }
         else 
         {
             temp = fn_decl_node->m_param_node; 
@@ -387,17 +388,9 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
     }
 
     if (current_token->get_value() == ")") 
-    {
-
-#if DEBUG_PARSER
-        std::cout << "Param parse completed" << std::endl; 
-#endif
        return true; 
-    } 
     else if (current_token->get_value() == "(") 
-    {
        return parse_fn_params(get_next(), fn_decl_node);
-    } 
 
 
     // Will be refactored for now we are working with a system that just checks if the value is a return type
@@ -408,9 +401,7 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
        DataType* param_type = TypeNode::validate_token_type(peek()->get_value());
        if (param_type->m_data_type == TYPE_INVALID) 
        {
-          std::cerr << "Invalid type in code: " << peek()->get_value() << std::endl;
-          // assert established for debugging otherwise it should be returning false in relases mode.
-          assert(false); 
+          assert(("Invalid type in code " && false)); 
           return false; 
        }
 
@@ -436,7 +427,7 @@ Parser::DeclType Parser::check_for_declartions(Token* current_token)
 }
 
 // if the current block level is greater 0 then we are in a statement block and the behaviour will be changing accordingly. 
-bool Parser::get_current_block_level() 
+size_t Parser::get_current_block_level() 
 {
     return m_sBlockStack.size();
 }
