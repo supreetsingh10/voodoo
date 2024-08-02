@@ -33,13 +33,14 @@ class Parser {
         DeclType check_for_declartions(Token* current_token); 
         // this returns the level of blocks we are currently in. 
         // This will be useful in making statement code. 
-        bool get_current_block_level();
+        size_t get_current_block_level();
 
     private: 
         // master functions.
         bool parse(Token* current_token); 
         bool parse_decl(Token* current_token, Node* decl_node); 
         bool parse_block(Token* current_token, BlockType block_type, StatementNode* block_node); 
+        bool parse_if(Token* current_token, BlockType block_type, StatementNode* block_node); 
         // master parsing functions end.
 
         bool parse_var_decl(Token* current_token, DeclarationNode* var_decl_node); 

@@ -116,7 +116,7 @@ struct StatementNode: public Node {
         m_init_expr(init_expr),
         m_expr(expr),
         m_next_expr(next_expr),
-        m_body(body),
+        m_ifbody(body),
         m_else_body(else_body),
         Node(STATEMENT)
     {}
@@ -127,9 +127,11 @@ struct StatementNode: public Node {
     // Member objects
     DeclarationNode* m_stmt_decl;
     ExpressionNode* m_init_expr, *m_expr, *m_next_expr;
-    StatementNode* m_body, *m_else_body; 
+    StatementNode* m_ifbody, *m_else_body; 
     // In case there are sub blocks in the statement.
-    StatementNode* m_normal_block;
+    StatementNode* m_code_block;
+
+    // this points to the next statement in the block.
     StatementNode* next;
 
     static void describe_stmt(StatementNode* s);

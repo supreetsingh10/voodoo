@@ -9,6 +9,8 @@ void Node::describe_tree(Node *n)
 {
      if (n->nodetype == DECLARATION) 
          DeclarationNode::describe_decl(dynamic_cast<DeclarationNode*>(n));
+     else if(n->nodetype == STATEMENT)
+         StatementNode::describe_stmt(dynamic_cast<StatementNode*>(n));
 }
 
 
@@ -76,6 +78,8 @@ void StatementNode::describe_stmt(StatementNode *s)
 
       DeclarationNode::describe_tree(s->m_stmt_decl);
       describe_stmt(s->next);
+      std::cout << "Code block below" << std::endl;
+      describe_stmt(s->m_code_block);
 }
 
 DataType* TypeNode::validate_token_type(const std::string &dat_type) 
