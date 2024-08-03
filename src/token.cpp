@@ -305,11 +305,12 @@ std::map<std::string, Operator> Operators::OperatorMap = {
 };
 
 
-// So operator should also check for the 
-bool Operators::parse(char cur, char next) {
+bool Operators::parse(char cur, char next) 
+{
     token_value += cur; 
 
     // Check here if the certain operator can only come once, or it can be doubled. 
+    // These operators can only come once.
     std::set<char> single_operators = { '{', '}', '(', ')', '[', ']', '?', ','};
 
     // if it finds any of these characters that can only exist alone, 
@@ -323,24 +324,31 @@ bool Operators::parse(char cur, char next) {
 
 std::set<TokenTypes> Operators::m_compatible_types = {OPERATOR}; 
 // if it finds the type in compatible type then it returns true, otherwise it returns false.
-bool Operators::incompatible_type(char next) {
+bool Operators::incompatible_type(char next) 
+{
     if(m_compatible_types.find(Token::get_type(next)) == m_compatible_types.end())
         return true;
 
     return false;
 }
 
-bool Operators::check_set_valid_token_type() {
-    try {
+bool Operators::check_set_valid_token_type() 
+{
+    try 
+    {
         this->m_operator_type = OperatorMap.at(token_value);
-    } catch (std::out_of_range) {
+    }
+    catch (std::out_of_range) 
+    {
        std::cerr << "Failed the operator " << this->token_value << ", check at line number " << m_line_number << std::endl;
        assert(!"Failed to find the operator"); 
        exit(1);
     }
+
     return true;
 }
 
-Operators* Operators::make_copy() {
+Operators* Operators::make_copy() 
+{
      return new Operators(this); 
 }
