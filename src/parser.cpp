@@ -1,5 +1,6 @@
 #include "../include/parser.hpp"
 #include <cassert>
+#include <cstddef>
 #include <vector>
 #include <iostream>
 
@@ -15,9 +16,12 @@ void Parser::set_input_stream(const std::vector<Token*>& input_stream)
 // this parse will call the parse with tokens. 
 bool Parser::parse() 
 {
+    int count = 0;
     while (m_Index < m_vpInputTokens.size()) 
     {
         bool success_parse = parse(get_current());
+
+        std::cout << "Count " << ++count << std::endl;
 
         if (!success_parse)
             return false;
@@ -28,15 +32,13 @@ bool Parser::parse()
     return true;
 }
 
-// this function will be recursive. 
-// I want to build a tree using this class which will have the root on m_pRoot. 
-// I will be building different rules for this. 
 bool Parser::parse(Token* current_token) 
 {
     int block_levels = get_current_block_level();
 
     // if we are not in a block
-    if (block_levels == 0) {
+    if (block_levels == 0) 
+    {
         Parser::DeclType decl_type = check_for_declartions(current_token);
 
         if (decl_type != DECL_NONE) 
@@ -46,21 +48,31 @@ bool Parser::parse(Token* current_token)
             // In the coming time we will have to dynamic cast the nodes to required child classes. 
             // This is where we will know what child class to cast
             decl_node->nodetype = DECLARATION;
-            m_bStartNodeSet = parse_decl(current_token, decl_node);
+            parse_decl(current_token, decl_node);
 
-
-            if(m_bStartNodeSet) 
+            if(!m_bStartNodeSet) 
             {
                m_StartNode = decl_node;
                m_bStartNodeSet = true;
             }
+            else 
+            {
+                DeclarationNode* temp = dynamic_cast<DeclarationNode*>(m_StartNode);
+                // Always next to the latest declaration.
+                while (temp->next != nullptr) 
+                    temp = temp->next;
+
+                temp->next = decl_node;
+            }
         }
     }
+
+    Node::describe_tree(m_StartNode);
 
     return true;
 }
 
-Token* Parser::skip_and_get(const size_t& skip_num) 
+Token* Parser::get_nth_from_current(const size_t& skip_num) 
 {
     assert(skip_num + m_Index < m_vpInputTokens.size());
     m_Index += skip_num;
@@ -150,7 +162,7 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
         // always get the latest node in the code block.
         StatementNode* local_code_block = temp_node->m_code_block;
 
-        if (temp_node->m_code_block == nullptr) 
+        if (temp_node->m_code_block == nullptr)
         {
             temp_node->m_code_block = new StatementNode(); 
             local_code_block = temp_node->m_code_block;
@@ -230,13 +242,8 @@ bool Parser::parse_decl(Token* current_token, Node* decl_node)
     if(current_token->get_value() == "fn") 
     {
        bool flag = parse_fn_decl(current_token, local_node);
-
-       if(flag)
-       {
-#if DEBUG_PARSER
-            Node::describe_tree(decl_node);
-#endif
-       }
+       assert(flag && "Failed to parse the fn declaration");
+       return flag;
     } 
     else if (current_token->get_value() == "let") 
         parse_var_decl(current_token, local_node);
@@ -298,7 +305,9 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
        else 
           assert(!"Invalid syntax. Name of the function is supposed to follow after fn");
     }
-    else if(current_token->get_value() == "(" && peek()->get_value() != ")") {
+    // if there are parameters we are parsing the params.
+    else if(current_token->get_value() == "(" && peek()->get_value() != ")") 
+    {
        if(!parse_fn_params(current_token, decl_node)) 
         {
             std::cerr << "Failed to parse fn parameters" << std::endl; 
@@ -308,13 +317,14 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
 
         // this will be going foward in order to parse the block. 
         parse_fn_decl(get_next(), decl_node); 
-
     }
+    // this means there is no parameters to the fn.
+    else if(current_token->get_value() == "(" && peek()->get_value() == ")")
+        parse_fn_decl(get_nth_from_current(static_cast<size_t>(2)), decl_node);
     // if current_token name is equal to decl_name that means the fn has been parsed 
     // and then we should move forward.
     else if (current_token->get_value() == decl_node->decl_name)
        parse_fn_decl(get_next(), decl_node);
-     // this is parsing the function return type
     else if (current_token->get_value() == ":") 
     {
        if (!decl_node->m_type_node) 
@@ -322,9 +332,8 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
 
        decl_node->m_type_node->m_data_node = TypeNode::validate_token_type(peek()->get_value());
 
-        parse_fn_decl(skip_and_get(2) ,decl_node);
+       parse_fn_decl(get_nth_from_current(static_cast<size_t>(2)) ,decl_node);
     } 
-
     else if (current_token->get_value() == "{") 
     {
         std::cout << "coming for block" << std::endl;

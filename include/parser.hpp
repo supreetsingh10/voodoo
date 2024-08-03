@@ -13,7 +13,7 @@ class Parser {
         ~Parser() {} 
 
         Token* get_next(); 
-        Token* skip_and_get(const size_t& skip_num); 
+        Token* get_nth_from_current(const size_t& skip_num); 
         Token* peek();
         Token* get_current(); 
 
@@ -27,6 +27,10 @@ class Parser {
            DECL_NONE,
            DECL_ARR,
         };
+
+        // TODO
+        // implement the return types for the blocks.
+        // They will be using our dataype code.
 
         // TODO: Implement
         // Returns the type of declation we will be parsing. 
