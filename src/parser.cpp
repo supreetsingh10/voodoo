@@ -72,7 +72,9 @@ Token* Parser::skip_and_get(const size_t& skip_num)
 bool Parser::allocate_stmt_memory(Token* current_stmt_token) 
 {
     if (current_stmt_token->get_value() == ";") 
-       return true; 
+       return true;
+    else if (current_stmt_token->get_value() == "{")
+        return true;
 
     return false;
 }
@@ -122,7 +124,6 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
 
             if (temp_node->m_stmt_decl == nullptr) 
                 temp_node->m_stmt_decl = local_decl_node;
-
             else
             {
                 DeclarationNode* latest_decl = temp_node->m_stmt_decl;
@@ -131,8 +132,8 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
 
                 while(latest_decl->next != nullptr)
                     latest_decl = latest_decl->next; 
-                latest_decl->next = local_decl_node;
 
+                latest_decl->next = local_decl_node;
             }
 
             if(!parse_var_decl(current_token, local_decl_node)) 
@@ -141,21 +142,35 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
                 assert(false);
                 return false;
             }
-
         }
-    } 
-    // if it is a { and we are already in a block then I want to create a new block and parse it as well.
+    }
     else if (current_token->get_value() == "{") 
     {
         assert(temp_node != nullptr);
         // always get the latest node in the code block.
         StatementNode* local_code_block = temp_node->m_code_block;
 
-        block_level_updater(current_token);
-        while (local_code_block != nullptr) 
-            local_code_block = local_code_block->next;
+        if (temp_node->m_code_block == nullptr) 
+        {
+            temp_node->m_code_block = new StatementNode(); 
+            local_code_block = temp_node->m_code_block;
+        }
+        else
+        {
+            // In case we have multiple code blocks in a fn. 
+            // We always want to go to the last one and add a new block to it.
+            while (local_code_block->next != nullptr) 
+                local_code_block = local_code_block->next;
 
-        local_code_block = new StatementNode(); 
+            local_code_block->next = new StatementNode(); 
+            local_code_block = local_code_block->next;
+        }
+
+        // We are sending in the next token to parse
+        // We do not need to handle the { brace here 
+        block_level_updater(current_token);
+        local_code_block->m_stmt_type = STMT_BLOCK;
+        assert(local_code_block != nullptr && "Block code is null");
         parse_block(get_next(), BLOCK_NORMAL, local_code_block);
     }
 
@@ -224,10 +239,7 @@ bool Parser::parse_decl(Token* current_token, Node* decl_node)
        }
     } 
     else if (current_token->get_value() == "let") 
-    {
-        // commented for now
         parse_var_decl(current_token, local_node);
-    }
 
     return true;
 }
@@ -324,7 +336,7 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
         // We want to return from the block then 
 
         block_level_updater(current_token);
-        bool flag = parse_block(current_token, BLOCK_FUNC, out_statement);
+        bool flag = parse_block(get_next(), BLOCK_FUNC, out_statement);
 
         assert(flag && "Failed to parse block");
         assert(out_statement != nullptr && "Out statement is nullptr");
@@ -352,11 +364,11 @@ bool Parser::allocate_param_memory(Token* current_token)
 //will not be called when there are no parameters.
 bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node) 
 {
-    ParamNode* param = nullptr; 
     ParamNode* latest_param = nullptr, *temp = nullptr;
 
     if (allocate_param_memory(current_token)) 
     {
+        ParamNode* param = nullptr; 
         param = new ParamNode(); 
 
         if (fn_decl_node->m_param_node == nullptr)
@@ -372,7 +384,7 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
             // points to the last parameter; 
             latest_param = temp->next;
         }
-    } 
+    }
     // if we are not allocating memory I still want to be on the last param node. 
     else 
     {
@@ -380,22 +392,21 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
 
         while (temp->next != nullptr) 
             temp = temp->next; 
-        
+
         latest_param = temp;
 
-        // added an asset here. 
         assert(latest_param != nullptr);
     }
 
     if (current_token->get_value() == ")") 
-       return true; 
+       return true;
     else if (current_token->get_value() == "(") 
        return parse_fn_params(get_next(), fn_decl_node);
 
 
     // Will be refactored for now we are working with a system that just checks if the value is a return type
-    if (peek()->get_value() == ":") 
-       latest_param->name = current_token->get_value();  
+    if (peek()->get_value() == ":")
+       latest_param->name = current_token->get_value();
     else if (current_token->get_value() == ":") 
     {
        DataType* param_type = TypeNode::validate_token_type(peek()->get_value());
