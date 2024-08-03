@@ -70,6 +70,8 @@ struct ParamNode: public Node
     TypeNode* m_param_type;
     // this will be pointing towards the next parameter. 
     ParamNode* next;
+
+    static void describe_param(ParamNode* p);
 }; 
 
 // Do not use this to create params for functions.
@@ -144,15 +146,36 @@ struct StatementNode: public Node {
 };
 
 
-enum ExpressionType {
-    EXPR_ASSIGN,
+enum ExpressionType 
+{
+    // Mathematical expression
     EXPR_ADD,
+    EXPR_SUB,
+    EXPR_MUL,
+    EXPR_DIV,
+    EXPR_MOD,
+
+    EXPR_ASSIGN,
     EXPR_COLON,
+
+    // Boolean expressions
+    EXPR_EQUALS,
+    EXPR_GREATER_THAN,
+    EXPR_GREATER_EQUALS_TO,
+    EXPR_LESS_EQUALS_TO,
+    EXPR_NOT_EQUALS,
+
+    // Bitwise
+    EXPR_AND,
+    EXPR_NOT,
+    EXPR_OR,
+
+    // Function calls expressions
 };
 
 
-// TODO to set up expressions.
-struct ExpressionNode: public Node {
+struct ExpressionNode: public Node 
+{
     ExpressionNode(): Node(EXPRESSION) {}
     virtual ~ExpressionNode() {}
 };

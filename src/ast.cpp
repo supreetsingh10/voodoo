@@ -24,11 +24,11 @@ void DeclarationNode::describe_decl(DeclarationNode *dn)
 
       std::cout <<"Declaration name " << dn->decl_name << std::endl;
       std::cout <<"Declaration " << dn->decl_type << std::endl;
+      TypeNode::describe_type(dn->m_type_node);
+      ParamNode::describe_param(dn->m_param_node);
+      StatementNode::describe_stmt(dn->m_stmts);
 
       describe_decl(dn->next);
-
-      TypeNode::describe_type(dn->m_type_node);
-      StatementNode::describe_stmt(dn->m_stmts);
 }
 
 DeclarationNode::~DeclarationNode() 
@@ -66,6 +66,15 @@ void TypeNode::describe_type(TypeNode *t)
       std::cout << "Type node value " << t->m_data_node->m_data_type << " " << t->m_data_node->m_data_value << std::endl;
 }
 
+void ParamNode::describe_param(ParamNode *p) 
+{
+   if(!p)
+      return; 
+
+   std::cout << "Param node " << p->name << std::endl; 
+   describe_param(p->next);
+}
+
 StatementNode::~StatementNode() 
 {
    if(m_stmt_decl)
@@ -98,7 +107,7 @@ DataType* TypeNode::validate_token_type(const std::string &dat_type)
 
     auto val = m_RetTypes.find(dat_type);
 
-    if (val == m_RetTypes.end()) 
+   if (val == m_RetTypes.end()) 
    {
       return nullptr;
    }
@@ -106,6 +115,3 @@ DataType* TypeNode::validate_token_type(const std::string &dat_type)
    DataType *d = new DataType(val->second);
    return d;
 }
-
-
-
