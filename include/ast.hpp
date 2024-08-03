@@ -103,7 +103,13 @@ enum StatementType {
 struct ExpressionNode; 
 struct StatementNode: public Node {
     // Constuctors
-    StatementNode() {}
+    StatementNode():
+        m_stmt_decl(nullptr),
+        m_ifbody(nullptr),
+        m_else_body(nullptr),
+        m_code_block(nullptr),
+        next(nullptr)
+    {}
     StatementNode(
             DeclarationNode* decl_node,
             ExpressionNode* init_expr,

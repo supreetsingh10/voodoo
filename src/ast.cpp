@@ -7,6 +7,9 @@
 
 void Node::describe_tree(Node *n) 
 {
+     if(!n)
+         return;
+
      if (n->nodetype == DECLARATION) 
          DeclarationNode::describe_decl(dynamic_cast<DeclarationNode*>(n));
      else if(n->nodetype == STATEMENT)
@@ -75,8 +78,7 @@ void StatementNode::describe_stmt(StatementNode *s)
       if(!s)
          return;
 
-
-      DeclarationNode::describe_tree(s->m_stmt_decl);
+      DeclarationNode::describe_decl(s->m_stmt_decl);
       describe_stmt(s->next);
       std::cout << "Code block below" << std::endl;
       describe_stmt(s->m_code_block);
