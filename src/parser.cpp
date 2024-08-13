@@ -13,18 +13,17 @@ void Parser::set_input_stream(const std::vector<Token*>& input_stream)
     m_vpInputTokens = input_stream; 
 }
 
-// this parse will call the parse with tokens. 
 bool Parser::parse() 
 {
-    int count = 0;
     while (m_Index < m_vpInputTokens.size()) 
     {
         bool success_parse = parse(get_current());
 
-        std::cout << "Count " << ++count << std::endl;
-
         if (!success_parse)
+        {
+            assert("Failed to parse");
             return false;
+        }
         else
             m_Index++;
     }
@@ -68,7 +67,6 @@ bool Parser::parse(Token* current_token)
     }
 
     Node::describe_tree(m_StartNode);
-
     return true;
 }
 
@@ -318,11 +316,11 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
         // this will be going foward in order to parse the block. 
         parse_fn_decl(get_next(), decl_node); 
     }
-    // this means there is no parameters to the fn.
     else if(current_token->get_value() == "(" && peek()->get_value() == ")")
         parse_fn_decl(get_nth_from_current(static_cast<size_t>(2)), decl_node);
-    // if current_token name is equal to decl_name that means the fn has been parsed 
-    // and then we should move forward.
+     // This has been added in order to make sure that we do not stay in the parsing loop when 
+    else if(current_token->get_value() == ")")
+        parse_fn_decl(get_next(), decl_node);
     else if (current_token->get_value() == decl_node->decl_name)
        parse_fn_decl(get_next(), decl_node);
     else if (current_token->get_value() == ":") 
@@ -360,10 +358,8 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
 
 bool Parser::allocate_param_memory(Token* current_token) 
 {
-    // Allocate memory when we are getting ready to parse the new fn parameter
     if (current_token->get_value() == ",") 
        return true; 
-    // allocate the memory when we are parsing the first paramater of the fn.
     else if (current_token->get_value() == "(") 
         return true;
 
@@ -425,8 +421,6 @@ bool Parser::parse_fn_params(Token* current_token, DeclarationNode* fn_decl_node
           return false; 
        }
 
-       // new TypeNode memory being called here. 
-       // Need to clean up the memory
        latest_param->m_param_type = new TypeNode(); 
        latest_param->m_param_type->m_data_node = param_type;
     }

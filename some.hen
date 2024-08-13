@@ -1,5 +1,27 @@
-fn hello() {
-    let hen = "yayyiiennn";
-    let number = 666;
+let master: int = 666;
+let slave: int = 555;
 
+
+fn main() : void
+{
+	let x: int = 100;
+}
+
+
+fn hello(name: str, age: int): void 
+{
+    let hen: str = "yayyiiennn";
+    let number: int = 666;
+
+{
+	    let wow: str = "yayyiiennn";
+	    let n2: int = 666;
+}
+
+{
+
+	    let s3_19: str = "yayyiiennn";
+	    let n3_100: int = 666;
+
+}
 }

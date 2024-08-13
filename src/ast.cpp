@@ -88,8 +88,11 @@ void StatementNode::describe_stmt(StatementNode *s)
          return;
 
       DeclarationNode::describe_decl(s->m_stmt_decl);
+
+      std::cout << "This is a statement node " << std::endl;
       describe_stmt(s->next);
-      std::cout << "Code block below" << std::endl;
+
+      std::cout << "Code block below " << std::endl;
       describe_stmt(s->m_code_block);
 }
 
