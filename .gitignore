@@ -1,4 +1,7 @@
 some.turt
 ./build/
 ./some.turt
+./cmake_install.cmake
+./cmake/
+./CMakeCache.txt
 
