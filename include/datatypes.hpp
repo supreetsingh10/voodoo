@@ -9,18 +9,20 @@ enum DATA_TYPE
     TYPE_CHAR,
     TYPE_INT,
     TYPE_DECI,
-    TYPE_NONE,
-    TYPE_INVALID,
     TYPE_USER_DEF,
+
+    TYPE_INVALID,
+    TYPE_NONE,
 };
 
 class DataType
 {
 public: 
-    DataType(): m_data_value("") {}
 
-    DataType(DATA_TYPE dt): m_data_type(dt){}
+    DataType(): m_data_value("") {}
+    DataType(DATA_TYPE dt): m_data_type(dt) {}
     DataType(const std::string& d): m_data_value(d) {}
+    DataType(const std::string& d, const DATA_TYPE& dt): m_data_value(d), m_data_type(dt) {}
 
     virtual ~DataType() {}
 

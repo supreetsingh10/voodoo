@@ -48,7 +48,8 @@ void Lexer::tokenize()
 // The current_char type is checked and set. 
 // If the current_char type is valid then it goes forward peeks the next character and goes on in the loop. 
 // If the next character is incompatible then it breaks the loop, copies the token and then pushes it. 
-void Lexer::scan() {    
+void Lexer::scan()
+{
     while (source_code->get_file_buffer().good()) {
         char current_char = source_code->get_file_buffer().get(); 
         if(current_char == '\n') {

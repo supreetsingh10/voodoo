@@ -24,6 +24,7 @@ void DeclarationNode::describe_decl(DeclarationNode *dn)
 
       std::cout <<"Declaration name " << dn->decl_name << std::endl;
       std::cout <<"Declaration " << dn->decl_type << std::endl;
+
       TypeNode::describe_type(dn->m_type_node);
       ParamNode::describe_param(dn->m_param_node);
       StatementNode::describe_stmt(dn->m_stmts);
@@ -69,7 +70,7 @@ void TypeNode::describe_type(TypeNode *t)
 void ParamNode::describe_param(ParamNode *p) 
 {
    if(!p)
-      return; 
+      return;
 
    std::cout << "Param node " << p->name << std::endl; 
    describe_param(p->next);
@@ -93,7 +94,7 @@ void StatementNode::describe_stmt(StatementNode *s)
       describe_stmt(s->next);
 
       std::cout << "Code block below " << std::endl;
-      describe_stmt(s->m_code_block);
+      describe_stmt(s->m_sub_block);
 }
 
 DataType* TypeNode::validate_token_type(const std::string &dat_type) 

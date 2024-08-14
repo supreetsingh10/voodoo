@@ -1,6 +1,7 @@
 #include "../include/parser.hpp"
 #include <cassert>
 #include <cstddef>
+#include <filesystem>
 #include <vector>
 #include <iostream>
 
@@ -66,7 +67,10 @@ bool Parser::parse(Token* current_token)
         }
     }
 
+#if DEBUG_PARSER
     Node::describe_tree(m_StartNode);
+#endif
+
     return true;
 }
 
@@ -158,12 +162,12 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
     {
         assert(temp_node != nullptr);
         // always get the latest node in the code block.
-        StatementNode* local_code_block = temp_node->m_code_block;
+        StatementNode* local_code_block = temp_node->m_sub_block;
 
-        if (temp_node->m_code_block == nullptr)
+        if (temp_node->m_sub_block == nullptr)
         {
-            temp_node->m_code_block = new StatementNode(); 
-            local_code_block = temp_node->m_code_block;
+            temp_node->m_sub_block = new StatementNode(); 
+            local_code_block = temp_node->m_sub_block;
         }
         else
         {
@@ -182,8 +186,17 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
         local_code_block->m_stmt_type = STMT_BLOCK;
         assert(local_code_block != nullptr && "Block code is null");
         parse_block(get_next(), BLOCK_NORMAL, local_code_block);
-    }
+    } 
+    else if(current_token->get_value() == "if")
+    {
+        assert(block_node->m_ifbody == nullptr);
+        block_node->m_ifbody = new StatementNode()
+        parse_expr(current_token, ExpressionNode *expr_node)
+    } 
+    else if(current_token->get_type() == IDENTIFIER) 
+    {
 
+    }
     // TODO Need to add the else block here,
     // These blocks will have if, if else, and else statements. 
 
@@ -191,11 +204,12 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
     return true;
 }
 
-bool Parser::parse_if(Token* current_token, BlockType if_block, StatementNode* block_type)
-{
-    return false;
-}
 
+bool Parser::parse_expr(Token* current_token, ExpressionNode* expr_node) 
+{
+
+    return true;
+}
 
 bool Parser::block_parse_completed(Token* current_token) 
 {
@@ -221,13 +235,18 @@ void Parser::block_level_updater(Token* current_token)
         m_sBlockStack.push('{');
     else if (current_token->get_value() == "}") 
     {
-        if (m_sBlockStack.size() == 0) {
+        if (m_sBlockStack.size() == 0) 
+        {
             std::cerr << "Improper usage of }" << std::endl;
             assert(false);
         }
 
         m_sBlockStack.pop();
     }
+
+#if DEBUG_PARSER
+    std::cout <<"Block level " << m_sBlockStack.size() << std::endl;
+#endif
 }
 
 
@@ -239,7 +258,7 @@ bool Parser::parse_decl(Token* current_token, Node* decl_node)
 
     if(current_token->get_value() == "fn") 
     {
-       bool flag = parse_fn_decl(current_token, local_node);
+       bool flag = parse_fn(current_token, local_node);
        assert(flag && "Failed to parse the fn declaration");
        return flag;
     } 
@@ -289,7 +308,7 @@ bool Parser::parse_var_decl(Token* current_token, DeclarationNode* var_decl_node
 
 
 // this function is not ending
-bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node) 
+bool Parser::parse_fn(Token* current_token, DeclarationNode* decl_node) 
 {
     if(current_token->get_value() == "fn") 
     {
@@ -298,7 +317,7 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
            decl_node->decl_type = DeclarationType::FUNCTION;
            decl_node->decl_name = peek()->get_value();
            // send the parsing forward;
-           parse_fn_decl(get_next(), decl_node);
+           parse_fn(get_next(), decl_node);
        } 
        else 
           assert(!"Invalid syntax. Name of the function is supposed to follow after fn");
@@ -314,15 +333,15 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
         }
 
         // this will be going foward in order to parse the block. 
-        parse_fn_decl(get_next(), decl_node); 
+        parse_fn(get_next(), decl_node); 
     }
     else if(current_token->get_value() == "(" && peek()->get_value() == ")")
-        parse_fn_decl(get_nth_from_current(static_cast<size_t>(2)), decl_node);
+        parse_fn(get_nth_from_current(static_cast<size_t>(2)), decl_node);
      // This has been added in order to make sure that we do not stay in the parsing loop when 
     else if(current_token->get_value() == ")")
-        parse_fn_decl(get_next(), decl_node);
+        parse_fn(get_next(), decl_node);
     else if (current_token->get_value() == decl_node->decl_name)
-       parse_fn_decl(get_next(), decl_node);
+       parse_fn(get_next(), decl_node);
     else if (current_token->get_value() == ":") 
     {
        if (!decl_node->m_type_node) 
@@ -330,11 +349,10 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
 
        decl_node->m_type_node->m_data_node = TypeNode::validate_token_type(peek()->get_value());
 
-       parse_fn_decl(get_nth_from_current(static_cast<size_t>(2)) ,decl_node);
+       parse_fn(get_nth_from_current(static_cast<size_t>(2)) ,decl_node);
     } 
     else if (current_token->get_value() == "{") 
     {
-        std::cout << "coming for block" << std::endl;
         StatementNode* out_statement = new StatementNode();
         assert(decl_node != nullptr && "Decl node cannot be a nullptr");
 
@@ -350,7 +368,7 @@ bool Parser::parse_fn_decl(Token* current_token, DeclarationNode* decl_node)
 
         decl_node->m_stmts = out_statement;
         return flag;
-    } 
+    }
 
     return true;
 }
@@ -440,13 +458,14 @@ Parser::DeclType Parser::check_for_declartions(Token* current_token)
     return DECL_NONE;
 }
 
+
 // if the current block level is greater 0 then we are in a statement block and the behaviour will be changing accordingly. 
-size_t Parser::get_current_block_level() 
+size_t Parser::get_current_block_level() const 
 {
     return m_sBlockStack.size();
 }
 
-Token* Parser::get_current() 
+Token* Parser::get_current() const 
 {
     if(m_Index >= m_vpInputTokens.size()) 
         return nullptr;
@@ -454,7 +473,7 @@ Token* Parser::get_current()
     return m_vpInputTokens[m_Index];
 }
 
-Token* Parser::peek() 
+Token* Parser::peek()
 {
     if(m_Index >= m_vpInputTokens.size())
         return nullptr;
@@ -463,7 +482,8 @@ Token* Parser::peek()
 }
 
 // moves the current location of the token. 
-Token* Parser::get_next() {
+Token* Parser::get_next()
+{
     // increment the index and check for the next one 
     ++m_Index;
     if (m_Index >= m_vpInputTokens.size()) {

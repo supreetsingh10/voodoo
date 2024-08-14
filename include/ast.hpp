@@ -21,7 +21,7 @@ enum BlockType {
     BLOCK_NORMAL,
 }; 
 
-struct Node 
+struct Node
 {
     Node() {}
     Node(NodeType e): nodetype(e) {}
@@ -40,7 +40,6 @@ struct DeclarationNode: public Node
 {
     DeclarationNode(): Node(DECLARATION), m_param_node(nullptr), m_stmts(nullptr), next(nullptr) {}
     virtual ~DeclarationNode();
-
 
     std::string decl_name;
     DeclarationType decl_type;
@@ -104,29 +103,15 @@ enum StatementType {
 
 struct ExpressionNode; 
 struct StatementNode: public Node {
-    // Constuctors
     StatementNode():
         m_stmt_decl(nullptr),
         m_ifbody(nullptr),
         m_else_body(nullptr),
-        m_code_block(nullptr),
+        m_sub_block(nullptr),
+        m_expr(nullptr),
+        m_init_expr(nullptr),
+        m_next_expr(nullptr),
         next(nullptr)
-    {}
-    StatementNode(
-            DeclarationNode* decl_node,
-            ExpressionNode* init_expr,
-            ExpressionNode* expr,
-            ExpressionNode* next_expr,
-            StatementNode* body, 
-            StatementNode* else_body
-            ): 
-        m_stmt_decl(decl_node),
-        m_init_expr(init_expr),
-        m_expr(expr),
-        m_next_expr(next_expr),
-        m_ifbody(body),
-        m_else_body(else_body),
-        Node(STATEMENT)
     {}
 
     virtual ~StatementNode();
@@ -134,11 +119,13 @@ struct StatementNode: public Node {
     StatementType m_stmt_type;
     // Member objects
     DeclarationNode* m_stmt_decl;
-    ExpressionNode* m_init_expr, *m_expr, *m_next_expr;
+
+    ExpressionNode* m_init_expr, *m_next_expr;
+    ExpressionNode* m_expr;
+
     StatementNode* m_ifbody, *m_else_body; 
     // In case there are sub blocks in the statement.
-    StatementNode* m_code_block;
-
+    StatementNode* m_sub_block;
     // this points to the next statement in the block.
     StatementNode* next;
 
@@ -146,19 +133,21 @@ struct StatementNode: public Node {
 };
 
 
-enum ExpressionType 
+enum Expression 
 {
     // Mathematical expression
+    // Binary expressions
     EXPR_ADD,
     EXPR_SUB,
     EXPR_MUL,
     EXPR_DIV,
     EXPR_MOD,
 
+    // Binary
     EXPR_ASSIGN,
-    EXPR_COLON,
 
     // Boolean expressions
+    // All are binary expression
     EXPR_EQUALS,
     EXPR_GREATER_THAN,
     EXPR_GREATER_EQUALS_TO,
@@ -167,15 +156,21 @@ enum ExpressionType
 
     // Bitwise
     EXPR_AND,
+    // Unary
     EXPR_NOT,
     EXPR_OR,
 
-    // Function calls expressions
+    EXPR_COLON,
+    EXPR_CALL,
 };
 
 
 struct ExpressionNode: public Node 
 {
-    ExpressionNode(): Node(EXPRESSION) {}
+    ExpressionNode(): Node(EXPRESSION), left(nullptr), right(nullptr) {}
     virtual ~ExpressionNode() {}
+
+    Expression m_expr_type;
+    ExpressionNode* left, *right;
+    DataType m_expr_data;
 };
