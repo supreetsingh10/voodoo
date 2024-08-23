@@ -190,8 +190,9 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
     else if(current_token->get_value() == "if")
     {
         assert(block_node->m_ifbody == nullptr);
-        block_node->m_ifbody = new StatementNode()
-        parse_expr(current_token, ExpressionNode *expr_node)
+
+        block_node->m_ifbody = new StatementNode();
+        parse_expr(current_token, block_node->m_ifbody);
     } 
     else if(current_token->get_type() == IDENTIFIER) 
     {
@@ -205,7 +206,7 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
 }
 
 
-bool Parser::parse_expr(Token* current_token, ExpressionNode* expr_node) 
+bool Parser::parse_expr(Token* current_token, StatementNode* expr_stmt) 
 {
 
     return true;

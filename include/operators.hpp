@@ -4,7 +4,7 @@ enum OperatorEnum {
     ADDITION,
     SUBTRACTION,
     DIVISION,
-    MULTOPLICATION,
+    MULTIPLICATION,
 
     GREATER_THAN,
     LESSER_THAN,
@@ -50,24 +50,25 @@ enum OperatorEnum {
 };
 
 
-struct Operator {
+struct Operator
+{
     OperatorEnum operator_enum;
     // uint32_t arg_count; 
     int precedence;
-    bool can_be_doubled;
 
     // added to fix the compiler warning.
-    Operator() {
+    Operator()
+    {
     }
 
     // added to fix the macro.
     Operator(OperatorEnum op_enum, int prec):
         operator_enum(op_enum), precedence(prec)
     {
-    
     }
 
-    Operator(const Operator* ops) {
+    Operator(const Operator* ops)
+    {
        this->operator_enum = ops->operator_enum;
        this->precedence = ops->precedence; 
     }

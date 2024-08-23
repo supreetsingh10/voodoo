@@ -1,6 +1,7 @@
 #pragma once
 #include "datatypes.hpp"
 #include <string>
+#include "./operators.hpp"
 
 enum NodeType {
     DECLARATION,
@@ -119,7 +120,6 @@ struct StatementNode: public Node {
     StatementType m_stmt_type;
     // Member objects
     DeclarationNode* m_stmt_decl;
-
     ExpressionNode* m_init_expr, *m_next_expr;
     ExpressionNode* m_expr;
 
@@ -132,8 +132,7 @@ struct StatementNode: public Node {
     static void describe_stmt(StatementNode* s);
 };
 
-
-enum Expression 
+enum ExpressionOperators
 {
     // Mathematical expression
     // Binary expressions
@@ -154,9 +153,10 @@ enum Expression
     EXPR_LESS_EQUALS_TO,
     EXPR_NOT_EQUALS,
 
+    EXPR_RETURN,
+
     // Bitwise
     EXPR_AND,
-    // Unary
     EXPR_NOT,
     EXPR_OR,
 
@@ -168,9 +168,10 @@ enum Expression
 struct ExpressionNode: public Node 
 {
     ExpressionNode(): Node(EXPRESSION), left(nullptr), right(nullptr) {}
-    virtual ~ExpressionNode() {}
+    virtual ~ExpressionNode();
 
-    Expression m_expr_type;
     ExpressionNode* left, *right;
+
+    std::string m_expr_name;
     DataType m_expr_data;
 };
