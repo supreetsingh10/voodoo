@@ -119,3 +119,11 @@ DataType* TypeNode::validate_token_type(const std::string &dat_type)
    DataType *d = new DataType(val->second);
    return d;
 }
+
+
+ExpressionNode::~ExpressionNode() 
+{
+   delete left;
+   delete right;
+}
+
