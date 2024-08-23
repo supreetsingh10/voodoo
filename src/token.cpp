@@ -209,98 +209,107 @@ Operators::~Operators() {}
 
 // The lower the precedence the important the operator, it will be executed first. 
 std::map<std::string, Operator> Operators::OperatorMap = {
-{
-        "+", Operator(OperatorEnum::ADDITION, 4)
-    }, 
-{
-        "-", Operator(OperatorEnum::SUBTRACTION, 4)
-    },
-{
-        "*", Operator(OperatorEnum::MULTOPLICATION, 3)
-    },
-{
-        "/", Operator(OperatorEnum::DIVISION, 3)
-    },
-{
-        ">", Operator(OperatorEnum::GREATER_THAN, 6)
-    },
-{
-        "<", Operator(OperatorEnum::LESSER_THAN, 6)
-    },
-{
-        "=", Operator(OperatorEnum::ASSIGNMENT, 14)
-    },
-{
-        "(", Operator(OperatorEnum::RIGHT_PAREN, 1)
-    },
-{
-        ")", Operator(OperatorEnum::LEFT_PAREN, 1)
-    },
-{
-        "{", Operator(OperatorEnum::RIGHT_CURLY, 1)
-    },
-{
-        "}", Operator(OperatorEnum::LEFT_CURLY, 1)
-    },
-{
-        ",", Operator(OperatorEnum::COMMA, 15)
-    },
-{
-        ";", Operator(OperatorEnum::SEMI_COLON, 1)
-    }, 
-{
-    ":", Operator(OperatorEnum::COLON, 1)
-},
-{
-        "[", Operator(OperatorEnum::RIGHT_SQUARE_BRACKET, 1)
-    },
-{
-        "==", Operator(OperatorEnum::EQUALS, 8)
-    },
-{
-        "]", Operator(OperatorEnum::LEFT_SQUARE_BRACKET, 1)
-    },
-{
-        "@", Operator(OperatorEnum::AT_RATE, 1)
-    },
-{
-        "$", Operator(OperatorEnum::DOLLAR, 1)
-    },
-{
-        "?", Operator(OperatorEnum::QUESTION_MARK, 6)
-    },
-{
-        "|", Operator(OperatorEnum::STRAIGHT_BAR, 8)
-    },
-{
-        "~", Operator(OperatorEnum::TILDE, 8)
-    },
-{
-        "`", Operator(OperatorEnum::BACK_TICK, 1)
-    },
-{
+    {
         "#", Operator(OperatorEnum::HASH, 1)
     },
-{
-        "%", Operator(OperatorEnum::PERCENT, 3)
-    },
-{
-        "!", Operator(OperatorEnum::EXCLAIMATION_MARK, 7)
-    },
-{
-        "^", Operator(OperatorEnum::CARET, 9)
-    },
-{
-        "&", Operator(OperatorEnum::AMPERSAND, 8)
-    },
-{
+    {
         "\\", Operator(OperatorEnum::BACK_SLASH, 1)
     },
-{
+    {
+        "_", Operator(OperatorEnum::UNDERSCORE, 1)
+    },
+    {
+        "@", Operator(OperatorEnum::AT_RATE, 1)
+    },
+    {
+        "$", Operator(OperatorEnum::DOLLAR, 1)
+    },
+    {
+        ";", Operator(OperatorEnum::SEMI_COLON, 1)
+    }, 
+    {
+        ":", Operator(OperatorEnum::COLON, 1)
+    },
+    {
+        "[", Operator(OperatorEnum::RIGHT_SQUARE_BRACKET, 1)
+    },
+    {
+        "]", Operator(OperatorEnum::LEFT_SQUARE_BRACKET, 1)
+    },
+    {
+        "(", Operator(OperatorEnum::RIGHT_PAREN, 1)
+    },
+    {
+        ")", Operator(OperatorEnum::LEFT_PAREN, 1)
+    },
+    {
+        "{", Operator(OperatorEnum::RIGHT_CURLY, 1)
+    },
+    {
+        "}", Operator(OperatorEnum::LEFT_CURLY, 1)
+    },
+    {
+        "`", Operator(OperatorEnum::BACK_TICK, 1)
+    },
+    {
+        "!", Operator(OperatorEnum::EXCLAIMATION_MARK, 2)
+    },
+    {
+        "*", Operator(OperatorEnum::MULTIPLICATION, 3)
+    },
+    {
+        "/", Operator(OperatorEnum::DIVISION, 3)
+    },
+    {
+        "%", Operator(OperatorEnum::PERCENT, 3)
+    },
+    {
         "\"", Operator(OperatorEnum::DOUBLE_QUOTE, 3)
     }, 
-{
-        "_", Operator(OperatorEnum::UNDERSCORE, 1)
+    {
+        "+", Operator(OperatorEnum::ADDITION, 4)
+    }, 
+    {
+        "-", Operator(OperatorEnum::SUBTRACTION, 4)
+    },
+    {
+        ">", Operator(OperatorEnum::GREATER_THAN, 6)
+    },
+    {
+        "<", Operator(OperatorEnum::LESSER_THAN, 6)
+    },
+    {
+        ">=", Operator(OperatorEnum::GREATER_THAN_EQUAL, 6)
+    },
+    {
+        "<=", Operator(OperatorEnum::LESS_THAN_EQUAL, 6)
+    },
+    {
+        "==", Operator(OperatorEnum::EQUALS, 7)
+    },
+    {
+        "!=", Operator(OperatorEnum::NOT_EQUAL, 7)
+    },
+    {
+        "=", Operator(OperatorEnum::ASSIGNMENT, 14)
+    },
+    {
+        ",", Operator(OperatorEnum::COMMA, 15)
+    },
+    {
+        "?", Operator(OperatorEnum::QUESTION_MARK, 6)
+    },
+    {
+        "|", Operator(OperatorEnum::STRAIGHT_BAR, 8)
+    },
+    {
+        "~", Operator(OperatorEnum::TILDE, 8)
+    },
+    {
+        "^", Operator(OperatorEnum::CARET, 9)
+    },
+    {
+        "&", Operator(OperatorEnum::AMPERSAND, 8)
     },
 };
 
@@ -323,7 +332,6 @@ bool Operators::parse(char cur, char next)
 }
 
 std::set<TokenTypes> Operators::m_compatible_types = {OPERATOR}; 
-// if it finds the type in compatible type then it returns true, otherwise it returns false.
 bool Operators::incompatible_type(char next) 
 {
     if(m_compatible_types.find(Token::get_type(next)) == m_compatible_types.end())
