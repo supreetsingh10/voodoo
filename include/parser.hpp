@@ -8,7 +8,7 @@
 
 
 class Parser {
-    public: 
+    public:
         Parser(): m_StartNode(nullptr), m_Index((0)), m_bStartNodeSet(false) {} 
         ~Parser() {} 
 
@@ -40,12 +40,13 @@ class Parser {
         // This will be useful in making statement code. 
         size_t get_current_block_level() const;
 
-    private: 
+    protected:
         // master functions.
         bool parse(Token* current_token); 
         bool parse_decl(Token* current_token, Node* decl_node); 
         bool parse_block(Token* current_token, BlockType block_type, StatementNode* block_node); 
-        bool parse_expr(Token* current_token, StatementNode* expr_stmt);
+        bool parse_if_expr(Token* current_token, StatementNode* expr_stmt);
+        bool parse_expr(Token* current_token, ExpressionNode* expr_node, ExpressionNode* expr_root);
 
         bool parse_var_decl(Token* current_token, DeclarationNode* var_decl_node); 
         bool block_parse_completed(Token* current_token);
@@ -55,11 +56,14 @@ class Parser {
 
         bool allocate_param_memory(Token* current_param_token); 
 
-        int get_fn_param_count(); 
+        int get_fn_param_count();
+        std::vector<Token*> get_line_tokens() const; 
+
 
         Node* m_StartNode; 
         bool m_bStartNodeSet; 
         size_t m_Index; 
+
 
     private:
         // statement parsing functions.

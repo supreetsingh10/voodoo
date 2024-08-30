@@ -1,6 +1,7 @@
 #pragma once
 
 enum OperatorEnum {
+    NOPE,
     ADDITION,
     SUBTRACTION,
     DIVISION,
@@ -53,24 +54,28 @@ enum OperatorEnum {
 struct Operator
 {
     OperatorEnum operator_enum;
-    // uint32_t arg_count; 
     int precedence;
 
     // added to fix the compiler warning.
-    Operator()
-    {
+    Operator():operator_enum(NOPE) {
     }
 
     // added to fix the macro.
     Operator(OperatorEnum op_enum, int prec):
-        operator_enum(op_enum), precedence(prec)
-    {
+        operator_enum(op_enum), precedence(prec) {
     }
 
-    Operator(const Operator* ops)
-    {
+    Operator(const Operator* ops) {
        this->operator_enum = ops->operator_enum;
        this->precedence = ops->precedence; 
+    }
+
+    const int get_precedence() const {
+        return this->precedence;
+    }
+
+    const OperatorEnum get_operator_enum() const {
+        return this->operator_enum;
     }
 };
 

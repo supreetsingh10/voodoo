@@ -132,7 +132,7 @@ struct StatementNode: public Node {
     static void describe_stmt(StatementNode* s);
 };
 
-enum ExpressionOperators
+enum ExpressionOperator
 {
     // Mathematical expression
     // Binary expressions
@@ -144,7 +144,6 @@ enum ExpressionOperators
 
     // Binary
     EXPR_ASSIGN,
-
     // Boolean expressions
     // All are binary expression
     EXPR_EQUALS,
@@ -153,7 +152,6 @@ enum ExpressionOperators
     EXPR_LESS_EQUALS_TO,
     EXPR_NOT_EQUALS,
 
-    EXPR_RETURN,
 
     // Bitwise
     EXPR_AND,
@@ -162,8 +160,15 @@ enum ExpressionOperators
 
     EXPR_COLON,
     EXPR_CALL,
+    EXPR_ARG,
+    EXPR_RETURN,
+    EXPR_SUBSCRIPT,
 };
 
+enum ExprType {
+    EXPR_OPERATOR,
+    EXPR_OPERAND,
+};
 
 struct ExpressionNode: public Node 
 {
@@ -171,7 +176,14 @@ struct ExpressionNode: public Node
     virtual ~ExpressionNode();
 
     ExpressionNode* left, *right;
+    Operator m_expr_opr;
+    ExprType m_type;
 
     std::string m_expr_name;
     DataType m_expr_data;
+
+    const int get_expr_precedence() const {
+        return m_expr_opr.get_precedence();
+    }
+
 };
