@@ -135,19 +135,17 @@ class Operators: public Token {
         static std::set<TokenTypes> m_compatible_types; 
         static std::map<std::string, Operator> OperatorMap; 
 
-    protected:
-        Operator m_operator_type;
-
     public: 
         Operators(); 
         virtual ~Operators();
         Operators(const Operators* o) {
            this->token_type = o->token_type; 
            this->token_value = o->token_value; 
-           this->m_operator_type = o->m_operator_type; 
+           this->m_operator= o->m_operator; 
            this->m_line_number = o->m_line_number;
         }
 
+        Operator m_operator;
         bool check_set_valid_token_type(); 
         virtual bool parse(char cur, char next) override; 
         virtual bool incompatible_type(char next_char) override; 

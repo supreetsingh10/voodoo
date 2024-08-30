@@ -1,12 +1,12 @@
 #include "../include/parser.hpp"
 #include <cassert>
 #include <cstddef>
-#include <filesystem>
+#include <exception>
 #include <vector>
 #include <iostream>
 
 
-#define DEBUG_PARSER true
+#define DEBUG_PARSER false
 
 
 void Parser::set_input_stream(const std::vector<Token*>& input_stream) 
@@ -185,6 +185,7 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
         block_level_updater(current_token);
         local_code_block->m_stmt_type = STMT_BLOCK;
         assert(local_code_block != nullptr && "Block code is null");
+
         parse_block(get_next(), BLOCK_NORMAL, local_code_block);
     } 
     else if(current_token->get_value() == "if")
@@ -192,11 +193,13 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
         assert(block_node->m_ifbody == nullptr);
 
         block_node->m_ifbody = new StatementNode();
-        parse_expr(current_token, block_node->m_ifbody);
+        parse_if_expr(current_token, block_node->m_ifbody);
     } 
-    else if(current_token->get_type() == IDENTIFIER) 
+    else if(current_token->get_type() == IDENTIFIER)
     {
-
+        assert(block_node->m_expr == nullptr);
+        block_node->m_expr = new ExpressionNode();
+        parse_expr(current_token, block_node->m_expr, nullptr);
     }
     // TODO Need to add the else block here,
     // These blocks will have if, if else, and else statements. 
@@ -206,7 +209,49 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
 }
 
 
-bool Parser::parse_expr(Token* current_token, StatementNode* expr_stmt) 
+bool Parser::parse_expr(Token* current_token, ExpressionNode* expre_stmt, ExpressionNode* expr_root) {
+    assert(expre_stmt != nullptr);
+
+
+    if(expr_root == nullptr) {
+        expr_root = expre_stmt;
+
+        if (peek()->get_type() == OPERATOR &&
+            peek()->get_value() != ";") 
+        {
+            ExpressionNode* ex = new ExpressionNode(); 
+            parse_expr(get_next(), ex, expr_root);
+        }
+    } else {
+        // check if the root needs to be changed.
+    }
+
+    if(peek()->get_value() == ";") 
+        return true; 
+
+    return false;
+}
+
+std::vector<Token*> Parser::get_line_tokens() const 
+{
+    size_t current = m_Index; 
+
+    while (m_vpInputTokens[current]->get_value() != ";" && current > 0) {
+        current--;
+    }
+
+    ++current;
+    std::vector<Token*> line_tokens; 
+
+    while(m_vpInputTokens[current]->get_value() != ";" && current < m_vpInputTokens.size()) {
+        line_tokens.push_back(m_vpInputTokens[current]);
+        ++current;
+    }
+
+    return line_tokens;
+}
+
+bool Parser::parse_if_expr(Token* current_token, StatementNode* expr_stmt) 
 {
 
     return true;

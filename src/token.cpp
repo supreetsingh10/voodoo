@@ -285,19 +285,13 @@ std::map<std::string, Operator> Operators::OperatorMap = {
         "<=", Operator(OperatorEnum::LESS_THAN_EQUAL, 6)
     },
     {
+        "?", Operator(OperatorEnum::QUESTION_MARK, 6)
+    },
+    {
         "==", Operator(OperatorEnum::EQUALS, 7)
     },
     {
         "!=", Operator(OperatorEnum::NOT_EQUAL, 7)
-    },
-    {
-        "=", Operator(OperatorEnum::ASSIGNMENT, 14)
-    },
-    {
-        ",", Operator(OperatorEnum::COMMA, 15)
-    },
-    {
-        "?", Operator(OperatorEnum::QUESTION_MARK, 6)
     },
     {
         "|", Operator(OperatorEnum::STRAIGHT_BAR, 8)
@@ -306,10 +300,16 @@ std::map<std::string, Operator> Operators::OperatorMap = {
         "~", Operator(OperatorEnum::TILDE, 8)
     },
     {
+        "&", Operator(OperatorEnum::AMPERSAND, 8)
+    },
+    {
         "^", Operator(OperatorEnum::CARET, 9)
     },
     {
-        "&", Operator(OperatorEnum::AMPERSAND, 8)
+        "=", Operator(OperatorEnum::ASSIGNMENT, 14)
+    },
+    {
+        ",", Operator(OperatorEnum::COMMA, 15)
     },
 };
 
