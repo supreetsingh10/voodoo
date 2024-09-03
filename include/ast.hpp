@@ -185,5 +185,4 @@ struct ExpressionNode: public Node
     const int get_expr_precedence() const {
         return m_expr_opr.get_precedence();
     }
-
 };
