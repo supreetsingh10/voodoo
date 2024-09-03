@@ -1,7 +1,6 @@
 #include "../include/parser.hpp"
 #include <cassert>
 #include <cstddef>
-#include <exception>
 #include <vector>
 #include <iostream>
 
@@ -194,7 +193,7 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
 
         block_node->m_ifbody = new StatementNode();
         parse_if_expr(current_token, block_node->m_ifbody);
-    } 
+    }
     else if(current_token->get_type() == IDENTIFIER)
     {
         assert(block_node->m_expr == nullptr);
@@ -209,25 +208,115 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
 }
 
 
-bool Parser::parse_expr(Token* current_token, ExpressionNode* expre_stmt, ExpressionNode* expr_root) {
-    assert(expre_stmt != nullptr);
+// There should be a latest operator node. Which has the last added operator cached.
+bool Parser::update_root(ExpressionNode* node, ExpressionNode* expr_root) {
+    if(expr_root == nullptr) 
+        expr_root = node;
+    else {
+        // Go through the tree and update the root if necessary
+        if(expr_root->m_type == EXPR_OPERAND) {
+            ExpressionNode* local = expr_root; 
+            expr_root = node;
+            expr_root->left = local; 
+        } else if(expr_root->m_type == EXPR_OPERATOR) {
+            if(!expr_root->right)
+                expr_root->right = node;
+            else {
+                ExpressionNode* node_transversal = expr_root, *recent_low_pres_node = nullptr;
+                // get the node with highest precedence.
+                while(node_transversal->left) {
+                    // this means that the node_transversal has less prescedence over current expression node.
+                    if(node_transversal->get_expr_precedence() > node->get_expr_precedence())
+                        recent_low_pres_node = node_transversal;
 
+                    node_transversal = node_transversal->left;
+                }
 
-    if(expr_root == nullptr) {
-        expr_root = expre_stmt;
+                if(recent_low_pres_node != nullptr) {
 
-        if (peek()->get_type() == OPERATOR &&
-            peek()->get_value() != ";") 
-        {
-            ExpressionNode* ex = new ExpressionNode(); 
-            parse_expr(get_next(), ex, expr_root);
+                }
+
+                node_transversal->left = node;
+
+            }
         }
-    } else {
-        // check if the root needs to be changed.
     }
 
-    if(peek()->get_value() == ";") 
-        return true; 
+    return true;
+}
+
+bool Parser::parse_expr(Token* current_token, ExpressionNode* expr_stmt, ExpressionNode* expr_root) {
+    // Marks the end of the expression parse.
+    if(current_token->get_type() == IDENTIFIER) {
+        expr_stmt->m_type = EXPR_OPERAND;
+        expr_stmt->m_expr_name = current_token->get_value();
+    }
+    else if(current_token->get_type() == NUMBER) {
+        expr_stmt->m_type = EXPR_OPERAND;
+        expr_stmt->m_expr_data.m_data_value = current_token->get_value();
+        expr_stmt->m_expr_data.m_data_type = DataType::number_type_from_literal(current_token->get_value());
+    }
+    else if(current_token->get_type() == OPERATOR) {
+        Operator *op = dynamic_cast<Operator*>(current_token);
+        assert(op != nullptr && "Failed to dynamic cast the operator.");
+
+        expr_stmt->m_type = EXPR_OPERATOR;
+        switch (op->get_operator_enum()) {
+            case ADDITION:
+            case SUBTRACTION:
+            case MULTIPLICATION:
+            case DIVISION:
+
+                break;
+            case GREATER_THAN:
+            case LESSER_THAN:
+            case ASSIGNMENT:
+            case EQUALS:
+            case NOT_EQUAL:
+            case LESS_THAN_EQUAL:
+            case GREATER_THAN_EQUAL:
+            case RIGHT_SINGLE_QUOTE:
+            case LEFT_SINGLE_QUOTE:
+            case RIGHT_SQUARE_BRACKET:
+            case LEFT_SQUARE_BRACKET:
+            case UNDERSCORE:
+            case DASH:
+            case COLON:
+            case SEMI_COLON:
+                return true;
+            case AT_RATE:
+            case DOLLAR:
+            case QUESTION_MARK:
+            case STRAIGHT_BAR:
+            case TILDE:
+            case BACK_TICK:
+            case HASH:
+            case PERCENT:
+            case EXCLAIMATION_MARK:
+            case CARET:
+            case COMMA:
+            case AMPERSAND:
+            case BACK_SLASH:
+            case DOT:
+                break;
+
+            case RIGHT_DOUBLE_QUOTE:
+            case LEFT_DOUBLE_QUOTE:
+            case NOPE:
+
+            case RIGHT_PAREN:
+            case LEFT_PAREN:
+            case RIGHT_CURLY:
+            case LEFT_CURLY:
+                break;
+            default:
+                break;
+        };
+
+    }
+
+    update_root(expr_stmt, expr_root);
+    // parse_expr(get_next(), , ExpressionNode *expr_root)
 
     return false;
 }

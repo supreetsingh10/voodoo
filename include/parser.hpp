@@ -42,6 +42,7 @@ class Parser {
 
     protected:
         // master functions.
+        bool update_root(ExpressionNode* node, ExpressionNode* expr_root);
         bool parse(Token* current_token); 
         bool parse_decl(Token* current_token, Node* decl_node); 
         bool parse_block(Token* current_token, BlockType block_type, StatementNode* block_node); 
