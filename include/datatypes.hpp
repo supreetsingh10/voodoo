@@ -29,5 +29,5 @@ public:
     std::string m_data_value; 
     DATA_TYPE m_data_type;
 
-    static DATA_TYPE number_type_from_literal(const std::string&);
+    static DATA_TYPE number_type_from_literal(const std::string& literal);
 };
