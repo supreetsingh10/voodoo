@@ -344,7 +344,7 @@ bool Operators::check_set_valid_token_type()
 {
     try 
     {
-        this->m_operator_type = OperatorMap.at(token_value);
+        this->m_operator = OperatorMap.at(token_value);
     }
     catch (std::out_of_range) 
     {

@@ -7,7 +7,6 @@
 
 #include "../include/parser.hpp"
 
-// start reading the file, peak the next token / word, decide it's type, then decide to keep going or terminate the reading. 
 int main() 
 {
     Lexer lexy = Lexer(); 
