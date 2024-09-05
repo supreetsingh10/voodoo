@@ -1,5 +1,6 @@
 #pragma once
 #include "datatypes.hpp"
+#include <cstdint>
 #include <string>
 #include "./operators.hpp"
 
@@ -172,7 +173,7 @@ enum ExprType {
 
 struct ExpressionNode: public Node 
 {
-    ExpressionNode(): Node(EXPRESSION), left(nullptr), right(nullptr) {}
+    ExpressionNode(): Node(EXPRESSION), left(nullptr), right(nullptr), m_id_exp_op(-1) {}
     virtual ~ExpressionNode();
 
     ExpressionNode* left, *right;
@@ -181,7 +182,12 @@ struct ExpressionNode: public Node
 
     std::string m_expr_name;
     DataType m_expr_data;
+    int m_id_exp_op;
+    static int last_added_op_node_id;
+    static ExpressionNode* last_added_node;
 
+    static ExpressionNode* get_expression_node_with_id(ExpressionNode* node_root, const int32_t node_id); 
+    static ExpressionNode* get_parent_node_for_op_expr(ExpressionNode* node_root, ExpressionNode* opr_node);
     const int get_expr_precedence() const {
         return m_expr_opr.get_precedence();
     }
