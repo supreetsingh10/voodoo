@@ -1,3 +1,4 @@
+#include "../include/datatypes.hpp"
 #include "../include/parser.hpp"
 #include <cassert>
 #include <cstddef>
@@ -209,40 +210,45 @@ bool Parser::parse_block(Token* current_token, BlockType block_type, StatementNo
 
 
 // There should be a latest operator node. Which has the last added operator cached.
+// The root of the expression will be the expression which will be of lowest presedence. i.e. which will 
+// have highest presedence value.
+// This function will only be responsible for placing the node in the 
+// this is not taking
 bool Parser::update_root(ExpressionNode* node, ExpressionNode* expr_root) {
-    if(expr_root == nullptr) 
+    if(!expr_root) {
         expr_root = node;
-    else {
-        // Go through the tree and update the root if necessary
+    } else {
         if(expr_root->m_type == EXPR_OPERAND) {
-            ExpressionNode* local = expr_root; 
-            expr_root = node;
-            expr_root->left = local; 
-        } else if(expr_root->m_type == EXPR_OPERATOR) {
-            if(!expr_root->right)
-                expr_root->right = node;
+            if(node->m_type == EXPR_OPERATOR) {
+                ExpressionNode* temp = expr_root;
+                expr_root = node;
+                expr_root->left = temp;
+                // Static value.
+                // Incremented when the Operator is inserted into the 
+                ExpressionNode::last_added_op_node_id += 1;
+                ExpressionNode::last_added_node = node;
+            }
             else {
-                ExpressionNode* node_transversal = expr_root, *recent_low_pres_node = nullptr;
-                // get the node with highest precedence.
-                while(node_transversal->left) {
-                    // this means that the node_transversal has less prescedence over current expression node.
-                    if(node_transversal->get_expr_precedence() > node->get_expr_precedence())
-                        recent_low_pres_node = node_transversal;
-
-                    node_transversal = node_transversal->left;
+                std::cout << "Weird expression going on here." << std::endl;
+            }
+        } else {
+            if(node->m_type == EXPR_OPERAND) {
+                if(!ExpressionNode::last_added_node->left) {
+                    ExpressionNode::last_added_node->left = node;
+                    return true;
+                } else if (!ExpressionNode::last_added_node->right) {
+                    ExpressionNode::last_added_node->right = node;
+                    return true;
+                } else {
+                    std::cerr << "Check the expression " << std::endl;
                 }
-
-                if(recent_low_pres_node != nullptr) {
-
-                }
-
-                node_transversal->left = node;
+            } else {
 
             }
         }
     }
 
-    return true;
+    return false;
 }
 
 bool Parser::parse_expr(Token* current_token, ExpressionNode* expr_stmt, ExpressionNode* expr_root) {
@@ -261,6 +267,8 @@ bool Parser::parse_expr(Token* current_token, ExpressionNode* expr_stmt, Express
         assert(op != nullptr && "Failed to dynamic cast the operator.");
 
         expr_stmt->m_type = EXPR_OPERATOR;
+        expr_stmt->m_id_exp_op = ExpressionNode::last_added_op_node_id;
+
         switch (op->get_operator_enum()) {
             case ADDITION:
             case SUBTRACTION:
@@ -312,7 +320,6 @@ bool Parser::parse_expr(Token* current_token, ExpressionNode* expr_stmt, Express
             default:
                 break;
         };
-
     }
 
     update_root(expr_stmt, expr_root);
