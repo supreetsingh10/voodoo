@@ -226,29 +226,30 @@ bool Parser::update_root(ExpressionNode* node, ExpressionNode* expr_root) {
                 // Static value.
                 // Incremented when the Operator is inserted into the 
                 ExpressionNode::last_added_op_node_id += 1;
-                ExpressionNode::last_added_node = node;
+                ExpressionNode::last_added_op_node = node;
             }
             else {
                 std::cout << "Weird expression going on here." << std::endl;
+                assert(false);
             }
         } else {
+            // expression_root is operator here
             if(node->m_type == EXPR_OPERAND) {
-                if(!ExpressionNode::last_added_node->left) {
-                    ExpressionNode::last_added_node->left = node;
-                    return true;
-                } else if (!ExpressionNode::last_added_node->right) {
-                    ExpressionNode::last_added_node->right = node;
-                    return true;
-                } else {
-                    std::cerr << "Check the expression " << std::endl;
+                if(!ExpressionNode::last_added_op_node ->left)
+                    ExpressionNode::last_added_op_node->left = node;
+                else if(!ExpressionNode::last_added_op_node->right)
+                    ExpressionNode::last_added_op_node->right = node;
+                else {
+                    std::cerr << "No Operator node seems to be available for this operand " << node->m_expr_name << std::endl;
+                    assert(false);
                 }
-            } else {
+            } else if(node->m_type == EXPR_OPERATOR) {
 
             }
         }
     }
 
-    return false;
+    return true;
 }
 
 bool Parser::parse_expr(Token* current_token, ExpressionNode* expr_stmt, ExpressionNode* expr_root) {
