@@ -167,13 +167,13 @@ struct ExpressionNode : public Node {
   virtual ~ExpressionNode();
 
   ExpressionNode *left, *right;
-  Operator m_expr_opr;
+  Operator* m_expr_opr;
   ExprType m_type;
 
   std::string m_expr_name;
   DataType m_expr_data;
   int m_id_exp_op;
-  const int get_expr_precedence() const { return m_expr_opr.get_precedence(); }
+  const int get_expr_precedence() const;
 
   static int last_added_op_node_id;
   static ExpressionNode *last_added_op_node;
@@ -183,5 +183,5 @@ struct ExpressionNode : public Node {
                                                      bool parent);
   static ExpressionNode *
   get_suitable_parent_node(ExpressionNode *node_root,
-                                       ExpressionNode *docker_node);
+                                       const ExpressionNode *child_node);
 };

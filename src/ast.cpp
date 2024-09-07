@@ -1,10 +1,12 @@
 #include "../include/ast.hpp"
 #include "../include/datatypes.hpp"
+#include <cassert>
 #include <iostream>
 #include <map>
 #include <utility>
 
 void Node::describe_tree(Node *n) {
+
   if (!n)
     return;
 
@@ -121,9 +123,10 @@ ExpressionNode *ExpressionNode::get_expression_node_with_id(
     return nullptr;
 
   if (parent_flag) {
-    if (expr_root->left->m_id_exp_op == node_id ||
-        expr_root->right->m_id_exp_op == node_id)
-      return expr_root;
+    if (!expr_root->left && expr_root->left->m_id_exp_op == node_id)
+      return expr_root->left;
+    else if (!expr_root->right && expr_root->right->m_id_exp_op == node_id)
+      return expr_root->right;
   } else {
     if (expr_root->m_id_exp_op == node_id || expr_root->m_id_exp_op == node_id)
       return expr_root;
@@ -144,12 +147,29 @@ ExpressionNode *ExpressionNode::get_expression_node_with_id(
   return local_node;
 }
 
+const int ExpressionNode::get_expr_precedence() const {
+  assert(this->m_expr_opr);
+  return this->m_expr_opr->get_precedence();
+}
+
 ExpressionNode *
 ExpressionNode::get_suitable_parent_node(ExpressionNode *node_root,
-                                         ExpressionNode *child_node) {
-   // taking the last expression node parent, which will help us decide how to proceed with the 
-  ExpressionNode* last_node_parent = get_expression_node_with_id(node_root, last_added_op_node_id, true);
-  ExpressionNode* last_node = (last_node_parent->left->m_id_exp_op == ExpressionNode::last_added_op_node_id) ? last_node_parent->left : last_node_parent->right;
+                                         const ExpressionNode *child_node) {
+  if (ExpressionNode::last_added_op_node_id == 1)
+    return last_added_op_node;
 
-   return (last_node->get_expr_precedence() >= child_node->get_expr_precedence())? last_node : last_node_parent;
+  ExpressionNode *last_node_parent =
+      get_expression_node_with_id(node_root, last_added_op_node_id, true);
+
+  ExpressionNode *last_node = nullptr;
+  if (last_node_parent->left && last_node_parent->left->m_id_exp_op ==
+                                    ExpressionNode::last_added_op_node_id)
+    last_node = last_node_parent->left;
+  else if (last_node_parent->right && last_node_parent->right->m_id_exp_op ==
+                                          ExpressionNode::last_added_op_node_id)
+    last_node = last_node_parent->right;
+
+  return (last_node->get_expr_precedence() >= child_node->get_expr_precedence())
+             ? last_node
+             : last_node_parent;
 }
