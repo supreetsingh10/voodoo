@@ -140,20 +140,24 @@ enum ExpressionOperator {
   // All are binary expression
   EXPR_EQUALS,
   EXPR_GREATER_THAN,
+  EXPR_LESSER_THAN,
   EXPR_GREATER_EQUALS_TO,
-  EXPR_LESS_EQUALS_TO,
+  EXPR_LESSER_EQUALS_TO,
   EXPR_NOT_EQUALS,
 
   // Bitwise
   EXPR_AND,
   EXPR_NOT,
   EXPR_OR,
+  EXPR_SEPARATOR,
 
+  EXPR_SEMI_COLON,
   EXPR_COLON,
   EXPR_CALL,
   EXPR_ARG,
   EXPR_RETURN,
   EXPR_SUBSCRIPT,
+  EXPR_NOPE,
 };
 
 enum ExprType {
@@ -163,12 +167,13 @@ enum ExprType {
 
 struct ExpressionNode : public Node {
   ExpressionNode()
-      : Node(EXPRESSION), left(nullptr), right(nullptr), m_id_exp_op(-1) {}
+      : Node(EXPRESSION), left(nullptr), right(nullptr), m_id_exp_op(-1)  {}
   virtual ~ExpressionNode();
 
   ExpressionNode *left, *right;
-  Operator* m_expr_opr;
+  Operator *m_expr_opr;
   ExprType m_type;
+  ExpressionOperator m_ExprOpr;
 
   std::string m_expr_name;
   DataType m_expr_data;
@@ -183,5 +188,5 @@ struct ExpressionNode : public Node {
                                                      bool parent);
   static ExpressionNode *
   get_suitable_parent_node(ExpressionNode *node_root,
-                                       const ExpressionNode *child_node);
+                           const ExpressionNode *child_node);
 };
