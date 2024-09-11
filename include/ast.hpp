@@ -158,6 +158,15 @@ enum ExpressionOperator {
   EXPR_RETURN,
   EXPR_SUBSCRIPT,
   EXPR_NOPE,
+
+  EXPR_CURL_BLOCK_BEGIN,
+  EXPR_CURL_BLOCK_END,
+
+  EXPR_RIGHT_PAREN,
+  EXPR_LEFT_PAREN,
+
+  EXPR_RIGHT_SQ,
+  EXPR_LEFT_SQ,
 };
 
 enum ExprType {
@@ -170,6 +179,8 @@ struct ExpressionNode : public Node {
       : Node(EXPRESSION), left(nullptr), right(nullptr), m_id_exp_op(-1)  {}
   virtual ~ExpressionNode();
 
+  bool m_fn_call, m_op_brace;
+  bool m_escalate_pres;
   ExpressionNode *left, *right;
   Operator *m_expr_opr;
   ExprType m_type;

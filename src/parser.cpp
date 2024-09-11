@@ -163,9 +163,10 @@ bool Parser::parse_block(Token *current_token, BlockType block_type,
     block_node->m_ifbody = new StatementNode();
     parse_if_expr(current_token, block_node->m_ifbody);
   } else if (current_token->get_type() == IDENTIFIER) {
+    ExpressionNode *out = nullptr;
     assert(block_node->m_expr == nullptr);
     block_node->m_expr = new ExpressionNode();
-    parse_expr(current_token, block_node->m_expr, nullptr);
+    parse_expr(current_token, block_node->m_expr, out);
   }
   // TODO Need to add the else block here,
   // These blocks will have if, if else, and else statements.
@@ -242,11 +243,17 @@ bool Parser::parse_expr(Token *current_token, ExpressionNode *expr_stmt,
   if (current_token->get_type() == IDENTIFIER) {
     expr_stmt->m_type = EXPR_OPERAND;
     expr_stmt->m_expr_name = current_token->get_value();
+    if (peek()->get_value() == "(" && peek()->get_type() == OPERATOR)
+      expr_stmt->m_fn_call = true;
   } else if (current_token->get_type() == NUMBER) {
     expr_stmt->m_type = EXPR_OPERAND;
     expr_stmt->m_expr_data.m_data_value = current_token->get_value();
     expr_stmt->m_expr_data.m_data_type =
         DataType::number_type_from_literal(current_token->get_value());
+
+    if (peek()->get_value() == "(" && peek()->get_type() == OPERATOR)
+      expr_stmt->m_op_brace = true;
+
   } else if (current_token->get_type() == OPERATOR) {
     Operators *op = dynamic_cast<Operators *>(current_token);
     assert(op != nullptr && "Failed to dynamic cast the operator.");
@@ -255,138 +262,153 @@ bool Parser::parse_expr(Token *current_token, ExpressionNode *expr_stmt,
     expr_stmt->m_id_exp_op = ExpressionNode::last_added_op_node_id;
 
     switch (op->m_operator.get_operator_enum()) {
-      case NOPE:
-      case ADDITION:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_ADD;
-        break;
-      case SUBTRACTION:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_SUB;
-        break;
-      case DIVISION:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_DIV;
-        break;
-      case MULTIPLICATION:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case PERCENT:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MOD;
-        break;
-      case GREATER_THAN:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_GREATER_THAN;
-        break;
-      case LESSER_THAN:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_LESSER_THAN;
-        break;
-      case ASSIGNMENT:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_ASSIGN;
-        break;
-      case EQUALS:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_EQUALS;
-        break;
-      case NOT_EQUAL:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_NOT_EQUALS;
-        break;
-      case LESS_THAN_EQUAL:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_LESSER_EQUALS_TO;
-        break;
-      case GREATER_THAN_EQUAL:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_GREATER_EQUALS_TO;
-        break;
-      case RIGHT_PAREN:
-        // Need to check how the to make sure it is a call operator
-        // expr_stmt->m_ExprOpr = ExpressionOperator::;
-        break;
-      case LEFT_PAREN:
-        // this will be responsible for closing the operator.
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case RIGHT_CURLY:
-        // we can skip this one. 
-        // Equate this to nope. 
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case LEFT_CURLY:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case RIGHT_SQUARE_BRACKET:
-        // Indexing operator.
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case LEFT_SQUARE_BRACKET:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case UNDERSCORE:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case DASH:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case COLON:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case SEMI_COLON:
-        // we can return this and use it to make as the EOL expression.
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_SEMI_COLON;
-        break;
-      case AT_RATE:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case DOLLAR:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case QUESTION_MARK:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case STRAIGHT_BAR:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case TILDE:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case BACK_TICK:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case HASH:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_NOPE;
-        break;
-      case EXCLAIMATION_MARK:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_NOT;
-        break;
-      case CARET:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case COMMA:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_SEPARATOR;
-        break;
-      case AMPERSAND:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case BACK_SLASH:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case DOT:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case DOUBLE_QUOTE:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case RIGHT_DOUBLE_QUOTE:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case LEFT_DOUBLE_QUOTE:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case RIGHT_SINGLE_QUOTE:
-        expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
-        break;
-      case LEFT_SINGLE_QUOTE:
-        break;
+    case NOPE:
+      std::cerr << "It is going in Nope " << op->get_value() << std::endl;
+      break;
+    case ADDITION:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_ADD;
+      break;
+    case SUBTRACTION:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_SUB;
+      break;
+    case DIVISION:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_DIV;
+      break;
+    case MULTIPLICATION:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case PERCENT:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MOD;
+      break;
+    case GREATER_THAN:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_GREATER_THAN;
+      break;
+    case LESSER_THAN:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_LESSER_THAN;
+      break;
+    case ASSIGNMENT:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_ASSIGN;
+      break;
+    case EQUALS:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_EQUALS;
+      break;
+    case NOT_EQUAL:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_NOT_EQUALS;
+      break;
+    case LESS_THAN_EQUAL:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_LESSER_EQUALS_TO;
+      break;
+    case GREATER_THAN_EQUAL:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_GREATER_EQUALS_TO;
+      break;
+    case RIGHT_PAREN:
+      // returns the node with the and the expression token. The root is fresh
+      return true;
+    case LEFT_PAREN:
+      // TODO: need to check for valid braces
+      if (expr_stmt->m_fn_call) {
+        // parse for function call.
+      } else {
+        expr_stmt->m_op_brace = true;
+      }
+      break;
+    case RIGHT_CURLY:
+      // we can skip this one.
+      // Equate this to nope.
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_CURL_BLOCK_BEGIN;
+      break;
+    case LEFT_CURLY:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_CURL_BLOCK_END;
+      break;
+    case RIGHT_SQUARE_BRACKET:
+      // Indexing operator.
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_RIGHT_SQ;
+      break;
+    case LEFT_SQUARE_BRACKET:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_LEFT_SQ;
+      break;
+    case UNDERSCORE:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case DASH:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case COLON:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case SEMI_COLON:
+      // we can return this and use it to make as the EOL expression.
+      // marks the end of the expression.
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_SEMI_COLON;
+      return true;
+    case AT_RATE:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case DOLLAR:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case QUESTION_MARK:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case STRAIGHT_BAR:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case TILDE:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case BACK_TICK:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case HASH:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_NOPE;
+      break;
+    case EXCLAIMATION_MARK:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_NOT;
+      break;
+    case CARET:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case COMMA:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_SEPARATOR;
+      break;
+    case AMPERSAND:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case BACK_SLASH:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case DOT:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case DOUBLE_QUOTE:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case RIGHT_DOUBLE_QUOTE:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case LEFT_DOUBLE_QUOTE:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case RIGHT_SINGLE_QUOTE:
+      expr_stmt->m_ExprOpr = ExpressionOperator::EXPR_MUL;
+      break;
+    case LEFT_SINGLE_QUOTE:
+      break;
     };
+  }
+
+  ExpressionNode *brace_root = nullptr;
+  if (expr_stmt->m_op_brace) {
+    ExpressionNode *brace_stmt = new ExpressionNode();
+    if (parse_expr(get_next(), brace_stmt, brace_root)) {
+      brace_root->m_escalate_pres = true;
+      update_root(expr_stmt, brace_root);
+    }
   }
 
   update_root(expr_stmt, expr_root);
   ExpressionNode *next_expr = new ExpressionNode();
-  parse_expr(get_next(),next_expr,expr_root);
+  parse_expr(get_next(), next_expr, expr_root);
 
   return true;
 }
